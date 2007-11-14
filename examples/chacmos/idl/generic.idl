@@ -1,0 +1,7 @@
+[uuid(1)] 
+
+interface generic
+
+{
+  int implements([in] int objID, [in] int list_size, [in, length_is(list_size)] int *interface_list);
+};

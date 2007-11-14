@@ -1,0 +1,5 @@
+IDL4 contains a full C/C++ parser and the corresponding backend. Normally,
+the parser is used to import types from C++ header files; the backend 
+writes the generated stubs to a C file. This little application demonstrates
+another use: When invoked with './weaver example.c example.out', it applies
+a source-level transformation to merge two separate classes into one.

@@ -1,0 +1,11 @@
+[uuid(5)]
+
+interface block
+
+{
+  int get_capacity([in] int objID, [out] int *blockcnt);
+  int set_capacity([in] int objID, [in] int blockcnt);
+  int get_blocksize([in] int objID, [out] int *size);
+  int read([in] int objID, [in] int blocknr, [in] int count, [out] int *size, [out, length_is(size)] char **data);
+  int write([in] int objID, [in] int blocknr, [in] int count, [in] int size, [in, length_is(size)] char *data);
+};

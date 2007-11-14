@@ -1,0 +1,12 @@
+timeout = 0
+
+title = ChacmOS
+kernel = (nd)/tftpboot/chacmos/rmgr -sigma0 -roottask
+module = (nd)/tftpboot/chacmos/x86-kernel
+module = (nd)/tftpboot/chacmos/sigma0
+module = (nd)/tftpboot/chacmos/booter
+module = (nd)/tftpboot/chacmos/memsvr
+module = (nd)/tftpboot/chacmos/namesvr
+module = (nd)/tftpboot/chacmos/ext2fs
+module = (nd)/tftpboot/chacmos/ramdisk
+module = (nd)/tftpboot/chacmos/shell

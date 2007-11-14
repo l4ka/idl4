@@ -1,0 +1,11 @@
+#include "types.idl"
+
+[uuid(7)]
+
+interface directory
+
+{
+  int resolve([in] int objID, [in] int size, [in, length_is(size)] char *name, [out] l4_threadid_t *dsvrID, [out] int *dobjID);
+  int link([in] int objID, [in] int size, [in, length_is(size)] char *name, [in] l4_threadid_t dsvrID, [in] int dobjID);
+  int unlink([in] int objID, [in] int size, [in, length_is(size)] char *name);
+};

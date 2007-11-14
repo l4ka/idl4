@@ -1,0 +1,8 @@
+#include "constants.idl"
+#include "generic.idl"
+#include "directory.idl"
+#include "file.idl"
+#include "filesystem.idl"
+
+interface filesvr : generic, directory, file, filesystem {
+};

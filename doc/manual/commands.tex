@@ -1,0 +1,35 @@
+\newcommand{\IDL}{IDL$\!^4\;$}
+\newcommand{\option}[1]{\texttt{#1}}
+
+%% Define an environment for lists of command line options.  This `optionlist'
+%% environment was adapted from the `Mentry' example on page 65 of _The_LaTeX_
+%% _Companion_ by Goossens et al.
+%%
+\newcommand{\optionlistlabel}[1]%
+  {\raisebox{0pt}[1ex][0pt]%
+            {\makebox[\labelwidth][l]%
+                     {\parbox[t]{\labelwidth}%
+                             {\raggedright\hspace{0pt}\option{#1}}%
+                     }%
+            }%
+  }
+\newcommand{\optionarg}[1]{\texttt{\emph{#1}}}
+\newcommand{\oroption}{\textrm{or}}
+\newenvironment{optionlist}%
+  {\begin{list}{}%
+         {\renewcommand{\makelabel}{\optionlistlabel}%
+          %
+          % Provide a command for padding the height of the text.  Required
+          % when the height of the text is less than the height of the item
+          % label.
+          \newcommand{\optionpad}{\\\mbox{}}%
+          %
+          % Set our various list lengths.
+          \setlength{\labelwidth}{2.0in}%
+          \setlength{\leftmargin}{2.4in}%
+          \setlength{\parsep}{1ex plus 0.3ex}%
+          \setlength{\partopsep}{0pt}%
+          \setlength{\itemsep}{0pt}%
+         }%
+  }%
+  {\end{list}}

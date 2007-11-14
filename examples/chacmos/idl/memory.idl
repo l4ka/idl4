@@ -1,0 +1,14 @@
+#include "types.idl"
+
+[uuid(3)]
+
+interface memory
+
+{
+  int get_pagerid([in] int objID, [out] int *pagerID);
+  int request_physical([in] int objID, [in] int fpage);
+  int unmap([in] int objID, [in] int fpage);
+  int attach([in] int objID, [in] l4_threadid_t taskID);
+  int set_maxpages([in] int objID, [in] int maxpages);
+  int get_mapped([in] int objID, [in] int fpage, [out] int *pages);
+};

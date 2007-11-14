@@ -1,0 +1,34 @@
+
+                ChacmOS -- a component-based operating system
+
+                     Andreas Haeberlen, Christian Schwarz,
+                           Horst Wenske, Markus Völp
+
+
+                              http://www.l4ka.org/                           
+                                   July 2000
+
+
+This is ChacmOS, a component-based operating system that was built during
+a systems course at Karlsruhe University. ChacmOS consists of four basic
+servers (task server, memory server, name server and file server) and
+various other components such as an interactive shell. Every server hosts a
+certain number of objects, which can interact with other objects through
+an extensible set of interfaces. The system also provides a hierarchical
+namespace that can be extended by mounting file systems such as the 
+included ext2 file system. However, it is designed to be single-user and,
+as a consequence, does not offer a security model.
+
+For generating the necessary communication code, ChacmOS relies on the
+IDL4 stub generator. IDL4 produces heavily optimized stub code from 
+standard DCOM or CORBA interface definitions. Newer distributions of IDL4
+contain ChacmOS as sample code; if you obtained ChacmOS from another
+source, you may need to download and install IDL4 separately.
+
+We decided to release ChacmOS under GPL because we think that it might
+be useful to others who are building their own systems on top of L4KA.
+However, we do not work on the system any more and therefore will not 
+provide support for it. If you have any comments or suggestions, please
+feel free to contact Andreas Haeberlen at haeberlen@ira.uka.de.
+
+## End of file

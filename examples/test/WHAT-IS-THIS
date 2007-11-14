@@ -1,0 +1,5 @@
+This directory contains the IDL4 test suite. It uses various interface 
+descriptions from the idl/ subdirectory to build an application which
+contains test implementations for all of them. This application can then
+be booted as a root task on top of the microkernel; it invokes and tests
+every operation to verify that the generated stubs are correct.

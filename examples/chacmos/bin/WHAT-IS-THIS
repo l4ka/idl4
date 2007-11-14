@@ -1,0 +1,3 @@
+The main makefile will store the system binaries in this directory. It
+also contains a configuration file for the GRUB bootloader and a sample
+ramdisk you can mount from ChacmOS at runtime.

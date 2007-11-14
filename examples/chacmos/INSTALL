@@ -1,0 +1,136 @@
+-------------------------------------------------------------------------------
+				BUILDING CHACMOS
+-------------------------------------------------------------------------------
+
+In order to build ChacmOS you will need an ANSI C compiler such as gcc, the
+GNU make utility and some disk space. To render the TeX documentation, you
+might also need LaTeX.
+
+To start the build, go to the top level directory and edit the Makeconf.local
+file; it contains paths to IDL4 and the Hazelnut source tree which you may
+need to adapt for your system. Then just do a 'make all'; this should generate 
+binaries for the servers and store them in the bin/ subdirectory. This 
+directory also contains a sample GRUB configuration file and an ext2 ramdisk, 
+which can be mounted at runtime.
+
+-------------------------------------------------------------------------------
+                                    BOOTING
+-------------------------------------------------------------------------------
+
+To run ChacmOS, you will need:
+
+   - a L4KA kernel suitable for your platform
+
+   - a root pager ('sigma0')
+
+   - the resource manager ('rmgr')
+   
+   - the GRUB bootloader
+
+The first three are included in the binary distribution available from 
+l4ka.org; you can also build these yourself from the CVS sources. The
+GRUB loader comes in a separate package. For more detail on how to obtain
+and install GRUB, please refer to the original L4KA documentation.
+
+In order to boot ChacmOS, please copy the kernel, the root pager, the
+resource manager and the contents of the bin/ subdirectory to your
+TFTP root directory. You may need to adjust the relative paths in 
+menu.lst. Then boot from your GRUB installation, and ChacmOS should start.
+
+-------------------------------------------------------------------------------
+		     		 TESTING CHACMOS
+-------------------------------------------------------------------------------
+
+The first thing you will see when booting ChacmOS is the kernel's startup
+message ('KD# startup'), to which you should respond by hitting 'g'. You
+will then see some diagnostic messages, followed - hopefully - by the
+shell's command prompt:
+
+      chacmOS:/ > #
+      
+The # is used as a cursor. You can now enter commands by typing them on the
+console:
+
+      chacmOS:/ > help
+        cat <file>         displays contents of <file>
+        cd <path>          changes working directory to <path>
+        debug [on|off]     enables or disables debugging
+        dir                shows detailed information about directory
+        help               displays the message you're reading
+        kd                 enters kernel debugger
+        ls                 lists contents of working directory
+        mount <bdev> <fs>  mounts a block device into a file system
+        pwd                prints path to working directory
+        umount <fs>        unmounts the filesystem
+      chacmOS:/ > #
+      
+You should use the 'dir' command to display the contents of the root
+directory:
+
+      chacmOS:/ > dir
+      dev                <4060001,  2>  -FD-C---        33 bytes
+      1 file(s)
+      
+      chacmOS:/ > #
+      
+The root directory contains only a single subdirectory called 'dev', in
+which all the components started at boot time register their names. 
+The 'dev' directory is hosted by a server with task ID 4060001h and has
+an object ID of 2. It supports the file interface (F, for reading the
+directory's contents), the directory interface (D) and the creator 
+interface (C), which is used to create new files or objects. 
+
+You should now try to enter the 'dev' directory and display its contents:
+
+      chacmOS:/ > cd dev
+      chacmOS:/dev/ > dir
+      ext2fs             <4070001,  0>  ---S----
+      namesvr            <4060001,  0>  ----C---
+      memory             <4050001,  0>  ----C---
+      hda                <4040001, 10>  ------B-   65536 bytes (128 blocks)
+      tasksvr            <4040001,  0>  T---C--- TID=4040001
+      5 file(s)
+      
+      chacmOS:/dev/ > #
+      
+This directory shows that all four basic servers have been loaded properly.
+It also shows an additional block device (B) called 'hda', which corresponds 
+to the ramdisk image. It can be mounted into the ext2fs filesystem:
+
+      chacmOS:/dev/ > mount hda ext2fs
+      chacmOS:/dev/ > dir
+      ext2fs             <4070001,  0>  -FDS----
+      namesvr            <4060001,  0>  ----C---
+      memory             <4050001,  0>  ----C---
+      hda                <4040001, 10>  ------B-   65536 bytes (128 blocks)
+      tasksvr            <4040001,  0>  T---C--- TID=4040001
+      5 file(s)
+      
+      chacmOS:/dev/ > #
+
+The effect of the 'mount' command is shown by the interfaces supported by
+ext2fs: It now has two additional interfaces (F and D) and acts as a 
+directory. You can enter it with the cd command:
+
+      chacmOS:/dev/ > cd ext2fs
+      chacmOS:/dev/ext2fs/ > dir
+      ...
+      
+      chacmOS:/dev/ext2fs/ > #
+      
+The ramdisk should contain an executable called 'tester'. You can start this
+application:
+
+      chacmOS:/dev/ext2fs/ > tester
+      ...
+      
+      chacmOS:/dev/ext2fs/ > #
+      
+The program will run some compatibility tests on the system and - again,
+hopefully - report success. You now have a fully functional ChacmOS system.
+
+Enjoy! :-)
+      
+-------------------------------------------------------------------------------
+
+## End of file.

@@ -1,0 +1,298 @@
+#include "custom.idl"
+
+module corba
+
+{
+  typedef struct {
+                   int a;
+                   char b;
+                   short c[3];
+                 } t_blubb;
+
+  interface registers
+  
+  {
+    // straight call
+    void alpha();
+    
+    // registers only
+    void beta(in int a);
+    void gamma(out int a);
+    void delta(in int a, in int b);
+    void epsilon(inout int a);
+    int zeta(in int a);
+    void eta(in int a, out int b);
+    int theta(out int a);
+    int iota(in int a, in int b);
+    void kappa(in int a, inout int b);
+    int lambda(inout int a);
+    void mu(inout int a, inout int b);
+    int nu(in int a, in int b, out int c);
+  };
+  
+  interface memory
+  
+  {  
+    char alpha(in short a, inout unsigned int b, out long long c);
+    long long beta(in octet a, out unsigned short b, in int c);
+    void gamma(inout int a, inout int b, in char c, in int d, in char e);
+    void delta(inout int a, inout int b, in char c, out char d);
+  };
+
+  #include "inheritance.idl"
+
+  interface structs
+  
+  {
+    struct t_un {
+      int a,b;
+      char c;
+    };  
+    
+    struct t_deux {
+      t_un a;
+      short b;
+      t_un c;
+    };
+    
+    struct t_trois {
+      long long a,b,c;
+    };
+    
+    typedef int t_a[5];
+    typedef t_a t_b[3];
+    
+    typedef struct {
+      t_a a;
+      t_b b[3];
+      int g[4][2], h[7];
+    } t_c;
+
+    typedef struct { char a; char b; } t_d;
+
+    void alpha(in t_un a, inout t_deux b, out t_trois c);
+    t_trois beta(inout t_un a, inout t_deux b, out t_un c, out t_deux d);
+    void gamma(in t_a a, in t_b b, in t_c c);
+    t_c delta(in t_c a, inout t_c b, out t_c c);
+    void epsilon(in t_d a, in t_d b);
+  };  
+
+  interface strings
+    
+  {
+    struct large_t {
+      int a[8];
+    };
+    struct huge_t {
+      long a[100];
+    };
+    
+    int alpha(in string<8> a, in string<5> b, in string<9> c);
+    int beta(in string<8> a, inout string<5> b, out string<9> c);
+    void gamma(in string<23> a, in t_blubb b, inout t_blubb c, out string<30> d, out string<40> e);
+    int delta(inout string<30> a);
+    int epsilon(in string<200> a, in int b, inout int c, out int d);
+    structs::t_trois zeta(in string<150> a, in string<9> b, inout char c, out long long d,
+                          inout short e, out t_blubb f, in string<170> g, in string<3> h);
+    void eta(out string<200> a, inout string<50> b, out int c, inout int d);
+    void theta(out string<300> s, out string<200> t);
+    void iota(in int ia, in int ib, in int ic, in string<200> a, out string<300> b, inout large_t c, out int d);
+    void kappa(in string<200> a, inout string<300> b, inout string<100> c, 
+               out string<200> d, out string<250> e, 
+               in int f, inout int g, out int h, out int i, out int j);
+    string<200> lambda(in int a, inout int b);
+    string<10> mu();
+    large_t nu(in string<10> a, in string<400> b, inout string<8> c, out large_t d);
+    short omikron(inout string<200> a);
+    void pi(out string<5> a, out string<10> b, out string<20> c, out string<800> d);
+    string rho(in string a, in string b, inout string c, out string d, inout boolean e, out octet f);
+    long long sigma(in large_t a, inout string<20> b, out string c, out short d);
+    wstring tau(in wstring a, inout wstring b, out wstring c);
+    wstring<10> ypsilon(in large_t a, in int b, inout wstring<7> c, out short d, out wstring<8> e);
+    void phi(in string a, in string b, in string c, in string d, in string e,
+             out string f, out string g, out string h, out string i, out string j);
+    void chi(in string a, out string b, in string c, out string d);
+    void psi(in huge_t x, in huge_t y, out huge_t z, out huge_t a);
+  };
+
+  interface pure_strings
+  
+  {
+    void alpha(in string a);
+    void beta(inout string b);
+    void gamma(out string c);
+    string delta();
+  };
+
+  [uuid (37)] interface forced_id
+
+  {
+    [uuid (5)] int alpha(in int a, inout int b, out int c);
+    [uuid (23)] void beta(in char a, inout long b);
+    int gamma(in int a);
+  };
+
+  interface imported_types
+
+  {
+    import "types.h";
+    
+    short alpha(in ext_int_t a, inout ext_struct_t b, out ext_alias_t c);
+  };
+
+  interface aliases
+  
+  {
+    /* small arrays, multiple assignments */
+    typedef char addr[7];
+    void eins(in addr saddr);
+    void zwei(inout addr saddr);
+    void drei(out addr saddr);
+
+    /* large arrays, idl4_memcpy */
+    typedef int madr[20];
+    void uno(in madr a);
+    void due(inout madr b);
+    void tres(out madr c);
+  };
+
+#if !defined(V2)
+  interface mapping
+  
+  {
+    exception blubb {};
+    void pagefault(in int ip, in int addr, out fpage p);
+    void alpha(in fpage a, out int b, out int c);
+    void beta(in fpage a, out fpage b);
+    short gamma(in fpage a, in int b, in octet c);
+    long delta(in int a, out fpage b);
+    void epsilon(in fpage a, in string b, in int c, out fpage d, out string e, out short f, out long g);
+    void zeta(in string a, out fpage b);
+    void eta(in long a, in long b, in long c, out fpage d);
+    void iota(in long a, out fpage b) raises (blubb);
+  };
+#endif /* !defined(V2) */
+
+  interface misc_types
+  
+  {
+    enum t_enum { eins, zwei, drei };
+    typedef t_enum t_enum_array[5][3];
+    typedef long double t_float_array[4];
+    typedef union {
+      int a;
+      char b;
+    } t_union;
+    typedef struct {
+      long a;
+      [handle] aliases b;
+    } t_handle;
+
+    t_enum alpha(in t_enum a, inout t_enum b, out t_enum c);
+    int beta(inout t_enum_array a);
+    float gamma(in float a, inout float b, out float c);
+    long long delta(inout t_float_array a, out t_union b);
+    short epsilon(in memory a, inout structs b, out long c);
+    memory zeta(in long a, in long b, in long c, out misc_types d);
+    ref short eta(in ref short a, inout ref short b, out ref short c);
+    ref void theta(in ref void a, inout ref void b, out ref void c);
+    void iota(inout long a, in t_handle b);
+  };
+
+  interface one_way
+
+  {
+    int alpha(inout int a);
+    oneway void beta();
+    oneway void gamma(in int a, in short b, in char c);
+    int delta(in int a, out short b);
+  };
+
+  interface sequences {
+    struct small_t { int x; long long z; char y; };
+    struct large_t { small_t a,b; };
+    typedef sequence<short> smallseq_t;
+    typedef sequence<large_t, 8> largeseq_t;
+    typedef sequence<long, 100> buffer_t;
+
+    short alpha(in int a, in smallseq_t b, in largeseq_t c);
+    void beta(out int a, out smallseq_t b);
+    void gamma(inout smallseq_t a);
+    void delta(in largeseq_t a, inout smallseq_t b, out largeseq_t c, 
+               out smallseq_t d, in string x, inout string y, 
+               out string<30> z, inout large_t m);
+    void epsilon(in short a, in largeseq_t b, in smallseq_t c, in smallseq_t d);
+    void zeta([prealloc] inout buffer_t a, out long b, out largeseq_t c);
+    void eta([prealloc] out buffer_t a, [prealloc] out buffer_t b, out string c);
+  };
+
+  module multi_if
+
+  {
+    typedef struct { int a[40]; } large_t;
+
+    [uuid(1)] interface A { 
+      void alpha(in string a, inout int b, inout int c, inout int d); 
+    };
+  
+    [uuid(1)] interface B : A { 
+      void beta(in string a, inout int b, inout int c, inout int d); 
+    };
+  
+    [uuid(3)] interface C { 
+      void gamma(in string a, inout large_t b, out int c, out int d); 
+    };
+
+    interface D : A, B, C {
+      void delta(in string a, inout string b, out string c, out int d);
+    };
+  };  
+
+#if defined(V4)
+  interface kmsg1 {
+    [kernelmsg(idl4::pagefault)] void pagefault(in int address, in int uip, [max_value(7)] in short privileges, out fpage f);
+  };
+
+  interface kmsg2 {
+    [kernelmsg(idl4::pagefault)] void pagefault(in int address, in int uip, [max_value(7)] in short privileges, out fpage f);
+    [kernelmsg(idl4::interrupt)] void interrupt();
+    int alpha(in char a, in long b, inout float c);
+    short beta(inout long a);
+  };
+
+  [uuid(3)] interface kmsg3p {
+    int alpha(in int a, inout int b, out int c);
+  };
+
+  interface kmsg3 : kmsg3p {
+    [kernelmsg(idl4::pagefault)] void pagefault(in int address, in int uip, [max_value(7)] in short privileges, out fpage f);
+    int beta(in char a, in long b, inout float c);
+    short gamma(inout long a);
+  };
+#endif /* defined(V4) */
+};
+
+library dce {
+  interface simple {
+    void alpha();
+    int beta([in] short a, [in, out] char *b, [out] long *c);
+    [oneway] void gamma([in] int a, [in] int b);
+  };
+
+  interface strings {
+    int alpha([in, string] char *a);
+    void beta([in, string] char *a, [in, out, string] char **b,
+              [out, string] char **c);
+    int gamma([in, string, length_is(b)] char *a, [in] int b);
+    short delta([in, string, length_is(49)] char *a);
+    void epsilon([out, string, length_is(b)] char **a, [out] int *b);
+    void zeta([out, string, length_is(37)] char **a);
+    octet eta([in, out, string, length_is(b)] char **a, [in, out] int *b);
+    float theta([in, out, string, length_is(89)] char **a, [in, out] int *b);
+    string iota([in, out] int *a, [in, out, string, length_is(d)] char **b,
+                [in] short c, [in, out] short *d, [in] int e, 
+                [in, string, length_is(g)] char *f, [in, max_value(100)] char g,
+                [out, string, length_is(78)] char **h);
+    void kappa([out, prealloc, length_is(size)] short **str, [out] long *size);
+  };
+};

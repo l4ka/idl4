@@ -1,0 +1,7 @@
+Andreas Haeberlen originally designed and implemented IDL4.
+
+Espen Skoglund added the autoconf-based build process.
+
+Sebastian Reichelt added the word, signed_word, and threadid types
+and implemented automatic conversion of these types for AMD64
+Compatibility Mode.

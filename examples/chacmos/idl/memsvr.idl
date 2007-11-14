@@ -1,0 +1,7 @@
+#include "constants.idl"
+#include "generic.idl"
+#include "creator.idl"
+#include "memory.idl"
+
+interface memsvr : generic, creator, memory {
+};

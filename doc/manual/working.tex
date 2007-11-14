@@ -1,0 +1,180 @@
+\chapter{Working with generated code}
+
+\section{Compiling the IDL file}
+
+\IDL can generate three types of output from a given interface description:
+
+\begin{itemize}
+\item \emph{Client stubs}, which are linked with every client application,
+i.e. every application that needs to invoke methods from the interface
+\item \emph{Server stubs}, which are used by every server that needs to
+implement the interface.
+\item \emph{Server templates}, which essentially contain a dummy implementation
+for the interface. They can be used as a starting point for writing a server.
+\end{itemize}
+
+Usually, the first two kinds of output are generated during the compilation
+process, whereas the third is only generated once and then extended with
+user code. You can select the kind of output by supplying \texttt{-c},
+\texttt{-s} or \texttt{-t} on the command line, respectively. For example,
+
+\begin{center}\texttt{
+idl4 -ix0 -pia32 -ffastcall -s pager.idl -h pager-server.h
+}\end{center}
+
+generates a header file called \texttt{pager-server.h} which contains all
+the server stubs for methods in \texttt{pager.idl}. Also, the X0 backend
+for the IA32 platform is selected, e.g. because the application will use
+the Hazelnut kernel and run on a Pentium-III processor. Finally, the
+\texttt{fastcall} option is given, which allows \IDL to use nonstandard
+system calls, in this case, the \texttt{sysenter} instruction.
+
+\section{Sending requests}
+
+As specified by the CORBA C language mapping \cite{corba-clm}, client stubs
+have two implicit parameters (i.e. parameters that are not defined by
+the interface). Consider the following example:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+module storage {
+   interface textfile {
+      void readln(
+        inout short pos, 
+        out string line
+      );
+   };
+};
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+library storage {
+   interface textfile {
+      void readln(
+        [in, out] short *pos, 
+        [out, string] char **line
+      );
+   };
+};
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+\noindent When this definition is compiled with the \texttt{-c} option, \IDL creates
+the following client stub:
+
+\begin{center}\begin{minipage}{10cm}\small\begin{verbatim}
+void storage_textfile_readln(
+         storage_textfile _service,
+         CORBA_short *pos, CORBA_char **line,
+         CORBA_Environment *_env
+)
+\end{verbatim}\end{minipage}\end{center}
+
+The first parameter, \texttt{\_service}, contains the thread ID of the server 
+where the request is to be sent. Unlike other CORBA code generators, \IDL
+does not provide a way to obtain this automatically; it assumes that this
+functionality is implemented by your system.
+
+The last parameter is a pointer to a \texttt{CORBA\_Environment} structure.
+This structure contains additional information related to the call, such as
+a timeout value or a memory window for receiving mappings. You must initialize
+this structure before invoking the call. 
+
+An invocation of \texttt{readln} could look like this:
+
+\begin{center}\begin{minipage}{13cm}\small\begin{verbatim}
+#include <storage_client.h>
+void test(l4_threadid_t server) {
+   CORBA_Environment env = idl4_default_environment;
+   short pos = 100;
+   char *buf;
+  
+   storage_textfile_readln(server, &pos, &buf, &env);
+  
+   switch (env._major) {
+      case CORBA_SYSTEM_EXCEPTION: 
+         printf("IPC failed, code %d\n", 
+            CORBA_exception_id(&env));
+         CORBA_exception_free(&env);
+         return -1;
+      case CORBA_USER_EXCEPTION:
+         printf("User-defined exception");
+         CORBA_exception_free(&env);
+         return -1;
+      case CORBA_NO_EXCEPTION:
+         break;
+   }
+
+   printf("Read: %s\n", buf);
+   CORBA_free(buf);
+}
+\end{verbatim}\end{minipage}\end{center}
+
+Note how \texttt{env} is initialized with an \IDL-supplied default value,
+which means a timeout of infinity and an empty receive window. Also, the
+example shows how environment structure can be used to determine whether
+an exception occurred during the call, and what type it was. Finally,
+it is important to always release storage allocated by the stubs (e.g. 
+exceptions, output strings, ...) with the appropriate function.
+
+\section{Processing requests}
+
+The standard server loop, which is included in the server template, mainly consists
+of two macros:
+
+\begin{itemize}
+\item \texttt{idl4\_reply\_and\_wait}, which sends any pending replies and then
+receives one incoming request, and
+\item \texttt{idl4\_process\_request}, which analyzes the request and calls the
+appropriate implementation function
+\end{itemize}
+
+Between those macros, you can insert additional code, e. g. a permission check.
+The second macro uses a function table to decide which
+function should handle the request; it takes the method number as an argument
+and uses it as an index into the table. Table entries which correspond to unassigned
+method numbers contain a reference to the \texttt{discard} function of the 
+interface; thus, this function is only called when a malformed request was received.
+
+The server template file also contains function templates for every method in
+the interface. For the example interface from above, the following template
+is created:
+
+\begin{center}\begin{minipage}{13cm}\small\begin{verbatim}
+IDL4_INLINE void storage_textfile_readln_implementation(
+   CORBA_Object _caller, CORBA_short *pos, 
+   CORBA_char **line, idl4_server_environment *_env
+)
+
+{
+   /* implementation of storage::textfile::readln */
+  
+   return;
+}
+
+IDL4_PUBLISH_STORAGE_TEXTFILE_READLN(
+   storage_textfile_readln_implementation
+);
+\end{verbatim}\end{minipage}\end{center}
+
+Similar to the client side, the function has two additional parameters. The first
+parameter, \texttt{\_caller}, contains the ID of the thread that has sent the
+request, whereas the last parameter, \texttt{\_env}, points to an internal data
+structure. Many functions in the \IDL runtime need a pointer to this structure,
+for example the function \texttt{CORBA\_exception\_set}, which is used to 
+raise exceptions.
+
+Please note the macro at the end of the function. This macro makes the function
+accessible to the server loop; for the optimizations to work, it is also very 
+important that this macro is included \emph{after} the implementation function. 
+
+Unlike the client side, memory allocation on the server side is mostly handled by
+the stub code, that is, you do not need to call \texttt{CORBA\_free}, except if 
+you explicitly allocated additional buffers. The stub code preallocates a buffer
+for every \texttt{out} value and passes a pointer to the implementation 
+function in the respective argument. However, for large buffers 
+(such as strings), you can save one copy by overwriting the pointer with another
+one pointing directly to the data you want to send.
+
+If you decide not to send a reply at all, you can use the \texttt{idl4\_set\_no\_response}
+function. In this case, the stub code will discard any \texttt{inout} or \texttt{out}
+values and skip the send phase; instead, it will directly receive another request.

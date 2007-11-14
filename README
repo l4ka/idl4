@@ -1,0 +1,122 @@
+IDL4 README
+Andreas Haeberlen
+May 31, 2002
+
+
+1. What does it do?
+
+IDL4 is a stub-code generator for the L4 platform. It generates communication
+stubs from interface descriptions written in a specification language such
+as CORBA IDL or DCE IDL. It also uses knowledge about the hardware platform
+and the microkernel to optimize the performance of the generated code.
+
+
+2. Requirements
+
+To build IDL4, you need at least the following:
+  
+   - gcc 2.95.2
+   - binutils 2.12
+   - flex 2.5.4
+   - bison 1.35
+   - gnu make 3.79.1
+
+Additionally, if you want to build the test suite, you need to have the
+sources of Pistachio, Hazelnut or Fiasco installed on your system.
+The Hazelnut sources are available from www.l4ka.org.
+
+
+3. Getting Started
+
+After obtaining the source tree (from CVS or as a tarball), run the configure
+script, then invoke make:
+
+   idl4/ > ./configure
+   idl4/ > make
+
+This will start the build process; the result is a binary called 'idl4',
+which can be found in the src/ subdirectory.
+
+You can customize the build process by giving additional parameters 
+to the configure script. The following parameters are available:
+
+   --with-hazelnut=<DIR>       Specify path to Hazelnut kernel sources
+   --with-pistachio=<DIR>      Specify path to Pistachio kernel sources
+   --with-fiasco=<DIR>         Specify path to Fiasco kernel sources
+   
+For testing, IDL4 comes with a small component-based operating system
+called ChacmOS. To build it, go to the examples/chacmos/ subdirectory
+and edit the file Makeconf.local, then run make:
+
+   idl4/src/ > cd ../examples/chacmos
+   idl4/examples/chacmos/ > emacs Makeconf.local
+   idl4/examples/chacmos/ > make
+   
+The resulting binaries can be found in the bin/ subdirectory, along with
+a small ramdisk image and a sample menu.lst file; you can use these 
+to boot ChacmOS via GRUB. For more details, please refer to the 
+installation instructions in the ChacmOS directory.
+
+
+4. Using IDL4
+
+To use IDL4, you first need an interface specification. IDL4's favourite
+specification language is CORBA IDL, so your interface description might
+look like this:
+
+   interface bank {
+      void deposit(in string owner, in long account_no, in float amount);
+      bool withdraw(in string owner, in long account_no, in float amount);
+      float balance(in long account_no);
+   };
+
+IDL4 can produce three types of output: Client bindings, server bindings,
+and a server template. To get the client bindings, write:
+ 
+   idl4/src/ > idl4 bank.idl -c
+   
+This results in a file called 'bank_client.h', which can be included in
+client applications; it contains the functions necessary to invoke the
+'bank' service. With
+
+   idl4/src/ > idl4 bank.idl -s
+   
+you can create similar bindings for the server side; these are used to 
+analyze incoming requests for the 'bank' service and to generate replies.
+Finally, use
+
+   idl4/src/ > idl4 bank.idl -t
+   
+to create a template file called 'bank_template.c'. This file contains
+functions like bank_deposit_implementation(), which should be filled with
+the corresponding code, e.g. for making deposits. It also contains a small
+routine called bank_server() which receives incoming requests and dispatches
+them to the appropriate functions.
+
+You can find a more complex example in the examples/ subdirectory.
+
+
+5. Building the test suite
+
+If you are unsure whether the IDL binary was compiled correctly, you can
+use the built-in test suite to check it. This requires the sources of
+at least one kernel (Fiasco, Hazelnut or Pistachio); you also need to
+run the configure script with the corresponding option(s). 
+
+To start the test, do a 'make test' from the main directory. If the first
+test succeeds, a number of binaries will be created in the examples/test
+subdirectory. For the second step, run these binaries stand-alone (as root
+tasks) on the respective kernels; i.e. the test_x0_ia32 binary should
+be run with Hazelnut on an Intel Pentium. Each binary will test various
+interfaces and then print a status report.
+
+
+6. Obtaining IDL4
+
+The current version of IDL4 is available from the L4Ka home page at
+http://www.l4ka.org/projects/idl4.
+
+
+7. Comments and Bug Reports
+
+Please send comments, bug reports and general feedback to haeberlen@ira.uka.de.

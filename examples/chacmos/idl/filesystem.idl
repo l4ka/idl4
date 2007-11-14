@@ -1,0 +1,10 @@
+#include "types.idl"
+
+[uuid(8)]
+
+interface filesystem
+
+{
+  int mount([in] int objID, [in] l4_threadid_t msvrID, [in] int mobjID);
+  int unmount([in] int objID);
+};

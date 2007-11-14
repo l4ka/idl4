@@ -1,0 +1,5 @@
+This component is used to boot ChacmOS. It locates the multiboot header
+and examines all the components loaded by GRUB. ELF executables are
+decoded and started; for other files, a block-oriented interface is
+provided, which can be used to mount file systems. After booting, the
+component acts as the system's task server.

@@ -1,0 +1,10 @@
+#include "types.idl"
+
+[uuid(2)]
+
+interface creator
+
+{
+  int can_create([in] int objID, [in] int list_size, [in, length_is(list_size)] int *interface_list);
+  int create([in] int objID, [in] int list_size, [in, length_is(list_size)] int *interface_list, [out] l4_threadid_t *dsvrID, [out] int *dobjID);
+};

@@ -1,0 +1,76 @@
+For newer releases, please see doc/RELEASE-NOTES.
+
+0.9.1
+  - BE: Visual debugging
+  - V4: New backend
+
+0.9.0
+  - GE: New build process
+  - X0: Register packing
+
+0.8.4
+  - BE: Sequence Type
+  - BE: Improved FID Assignment
+
+0.8.3
+  - BE: Portable fpages
+  - DK: User's manual
+ 
+0.8.2
+  - FE: C++ Parser reads Pistachio
+  - BE: V2 Support
+
+0.8.1  06/04/2002
+  - EX: ChacmOS 
+  - FE: Improved C++ Parser
+  - BE: Multi-Interface Templates
+
+0.8.0  28/03/2002
+  - FE: DCE Arrays
+  - BE: Basic V4 Support
+
+0.7.9  27/03/2002
+  - FE: DCE Unions
+  - FE: Basic DCE Support
+
+0.7.8  26/03/2002
+  - BE: Enumerations
+  - BE: Floating Point Types
+  - FE: Bitfields
+
+0.7.7  24/03/2002
+  - FE: Contexts withing the AOI tree
+  - BE: Server Environments
+  - BE: Exceptions
+
+0.7.6  21/03/2002
+  - FE: Full string support
+  - BE: Collision-free FID assignment
+
+0.7.5  17/03/2002
+  - BE: Arrays within structs
+  - BE: Improved test suite
+  - DC: Added quick reference manual
+
+0.7.4  05/03/2002
+  - FE: Pass-through preprocessor options
+  - BE: String aliases
+  - BE: Single output fpages
+
+0.7.3  03/03/2002
+  - FE: Improved header import
+  - FE: Custom includes
+  - BE: Oneway functions
+  - BE: Full inheritance support
+
+0.7.2  24/02/2002
+  - FE: C++ parser
+  - FE: Extractor
+  - FE: Forced IDs
+
+0.7.1  12/02/2002
+  - V4: New experimental backend
+  - X0: Improved layouting mechanism
+  - X0: Added VCC support
+  - X0: Added lipc
+

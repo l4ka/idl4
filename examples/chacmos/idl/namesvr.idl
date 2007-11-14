@@ -1,0 +1,8 @@
+#include "constants.idl"
+#include "generic.idl"
+#include "creator.idl"
+#include "directory.idl"
+#include "file.idl"
+
+interface namesvr : generic, creator, directory, file {
+};

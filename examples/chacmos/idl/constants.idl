@@ -1,0 +1,32 @@
+const int GENERIC_API	= 0x00000000;
+const int DIRECTORY_API	= 0x00524944;
+const int CREATOR_API	= 0x41455243;
+const int FILE_API	= 0x454C4946;
+const int TASK_API	= 0x4B534154;
+const int BLOCK_API	= 0x4B434C42;
+const int FILESYSTEM_API= 0x53595346;
+const int LOCKABLE_API	= 0x4B434F4C;
+const int MEMORY_API	= 0x004D454D;
+
+// Return codes
+
+const int ESUCCESS   	= 1;   // successful operation
+const int EYES       	= 1;   // 
+const int ENO        	= 0;   //
+
+const int ESUPP      	= -1;  // not supported
+const int EDENIED    	= -2;  // access denied
+const int EAGAIN     	= -3;  // method currently not available (try later)
+
+const int ENOTFOUND  	= -4;  // not found
+const int EBADPARM   	= -5;  // bad parameter
+const int EEXISTS    	= -6;  // name already exists
+const int EFULL      	= -7;  //
+const int ELOCKED    	= -8;  // object locked by another thread object
+const int EEOF       	= -9;  // end of file
+const int ENOTOPEN   	= -10; // file not open
+const int EINVALID   	= -11; // objID invalid
+
+// Constants
+
+const int DEFAULT_OBJECT= 0;

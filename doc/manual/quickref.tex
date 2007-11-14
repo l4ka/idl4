@@ -1,0 +1,157 @@
+\chapter{Quick reference guide}
+
+\section{Invoking \IDL}
+
+\IDL is generally invoked in the following way:
+\begin{center}\texttt{idl4 [OPTIONS] input.idl}\end{center}
+The following sections contain a more detailed description of the individual
+options.
+
+\subsection{Overall Options}
+
+\begin{optionlist}
+\item[-c\linebreak-s\linebreak-t] 
+These options are used to control the kind of output. The following output
+types are available:
+\begin{itemize}
+\item \emph{Client stubs (-c)} are used by client tasks to invoke a service
+\item \emph{Server stubs (-s)} contain functions to receive and dispatch
+incoming requests on the server side
+\item \emph{Server templates (-t)} can be used as a starting point when
+implementing a new service. They contain function prototypes and a simple
+server loop.
+\end{itemize}
+\item[-o~\optionarg{filename.c}]
+Place code output in \emph{filename.c}. Note that for some mappings, the stub
+code is contained entirely in the header files.
+\item[-h~\optionarg{filename.h}]
+Create a header file called \emph{filename.h}. This option cannot be used
+together with \texttt{-t}, because server templates do not include a header
+file.
+\item[-v]
+Print the version number and build date on standard output.
+\end{optionlist}
+
+\subsection{Warning Options}
+
+\begin{optionlist}
+\item[-Wprealloc]
+Warn whenever a stub needs to allocate an excessive amount of heap memory,
+e.g. when an unlimited output string is encountered.
+\item[-Wall]
+All of the above '-W' options combined. 
+\end{optionlist}
+
+\subsection{Debugging Options}
+
+\begin{optionlist}
+\item[-dtest]
+Generate test code. When used with \texttt{-t}, this creates a test application
+that can run as a root task on the bare microkernel. The code creates 
+a server for each interface in the IDL and then invokes every operation with
+random parameters.
+\item[-dparanoid]
+Add even more checks to the test code. For example, test for stack overflow
+and monitor the message dopes.
+\item[-dcpp]
+Print each input line as it is read from the C preprocessor. 
+\item[-daoi]
+Dump the abstract syntax tree generated from the IDL file.
+\item[-dcheck]
+Generate debug output for the semantical analysis and consistency check.
+\item[-dcast]
+Dump the C abstract syntax tree.
+\item[-dfids]
+Print the function ID assignment.
+\item[-dmarshal]
+Show details about the marshalling stage.
+\item[-dgenerator]
+Analyze the stub generator and the backend.
+\item[-dimport]
+Generate debug info while importing C++ headers.
+\item[-dreorder]
+Show details when reordering parameters.
+\item[-dvisual]
+Add debug output to the server stubs.
+\item[-d]
+All of the above.
+\end{optionlist}
+
+\subsection{Miscellaneous Options}
+
+\begin{optionlist}
+\item[-ffastcall]
+Allows \IDL to use a non-conforming IPC system call where available.
+The resulting code is faster, but may not be entirely compliant with the
+kernel specification. For example, the X0/IA32 backend may use
+\texttt{sysenter} to invoke the IPC system call.
+\item[-flipc]
+Enables support for local IPC on X0-style kernels.
+\item[-fctypes]
+Use ANSI C types instead of the platform-independent CORBA types
+(like \texttt{CORBA\_long}).
+\item[-fomit-frame-pointer]
+Assume the frame pointer is not used. This option must be consistent with
+the corresponding gcc option.
+\item[-fuse-malloc]
+Allows \IDL to use dynamic memory allocation (e.g. \texttt{CORBA\_alloc}).
+This is enabled by default; if you disable it, you must preallocate buffers
+for \emph{all} variable-sized output parameters, such as \texttt{sequence}
+or \texttt{string}.
+\item[-fomit-empty-files]
+Prevents files from being generated if they do not contain any code.
+This is enabled by default.
+\item[-floop-only]
+In server templates, removes all definitions except server loops.
+\item[-fmodules-only]
+In server templates, generate code only for interfaces that are defined
+in a module.
+\end{optionlist}
+
+These options can also be disabled by using a \texttt{no-} prefix
+(e.g. \texttt{-fno-fastcall}).
+
+\subsection{Preprocessor Options}
+
+\begin{optionlist}
+\item[-D~\optionarg{macro}]
+Defines \emph{macro} in the preprocessor.
+\item[-I~\optionarg{path}]
+Adds \emph{path} to the current include path. The include path is passed
+to the preprocessor and is also searched when importing types.
+\item[-Wp,\optionarg{option}]
+Passes \emph{option} directly to the preprocessor.
+\item[---with-cpp~\optionarg{path}]
+Use another preprocessor (the default is /usr/bin/cpp)
+\end{optionlist}
+
+\subsection{Target Options}
+
+\begin{optionlist}
+\item[-m~\optionarg{mapping}]
+When generating stub code, use the specified mapping (C or C++).
+\item[-i~\optionarg{interface}]
+Produce code for the specified kernel interface.
+\item[-p~\optionarg{platform}]
+Optimize for the specified platform (\texttt{generic} is allowed).
+\item[-w~\optionarg{wordsize}]
+Specifies the word size in bits (32 or 64) where it cannot be determined
+from the platform, e.g. in the generic backends.
+\item[-C]
+For 64-bit platforms, generate stub code that can interact with (existing)
+32-bit programs.
+This causes all types except \texttt{word}, \texttt{signed\_word},
+\texttt{threadid}, \texttt{Object}, \texttt{string}, and \texttt{fpage}
+to be forbidden.
+Thread IDs are converted automatically, and signed words are
+sign-extended to 64 bits.
+\IDL can determine the destination thread type automatically only in
+a normal server reply situation. If you want to use delayed reply, or
+want to call a 32-bit server from a 64-bit client, you need to write
+
+\texttt{\#define IDL4\_IS\_32BIT(tid) (/* your code */)}
+
+before including the \IDL header file.
+\item[---sys-prefix~\optionarg{path}]
+Add a prefix to all system include files
+\end{optionlist}

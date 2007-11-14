@@ -1,0 +1,10 @@
+# Add a path to the Hazelnut kernel sources here
+HAZELNUT  = 
+
+# This should point to the directory where you installed the IDL4 sources.
+# If you obtained ChacmOS as part of the IDL4 distribution, you should
+# not need to change anything
+IDL4DIR   = $(TOPDIR)/../../
+
+# This should point to the IDL4 binary; the default should be fine.
+IDL4	  = $(IDL4DIR)/src/idl4

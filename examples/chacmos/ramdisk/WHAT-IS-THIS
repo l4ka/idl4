@@ -1,0 +1,7 @@
+This subdirectory contains a Makefile that can be used to build
+ext2 ramdisk files. When such a ramdisk is loaded via GRUB, the
+booter task makes it accessible as a block device (/dev/hdxx)
+which can then be mounted by the ext2fs file system.
+
+To create a ramdisk, you must run the Makefile as root, and your
+kernel must support loop devices (CONFIG_BLK_DEV_LOOP=y).

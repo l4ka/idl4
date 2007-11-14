@@ -1,0 +1,10 @@
+Makefile
+Makefile.in
+*.aux
+*.bbl
+*.blg
+*.dvi
+*.ps
+*.pdf
+*.toc
+*.log

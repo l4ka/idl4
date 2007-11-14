@@ -1,0 +1,11 @@
+Makefile
+Makefile.in
+configure
+config.*
+stamp-h*
+idl4-*
+aclocal.m4
+install-sh
+missing
+mkinstalldirs
+depcomp

@@ -1,0 +1,660 @@
+ %
+ % Copyright (c) 2000 University of Karlsruhe
+ %
+ % This file is part of ChacmOS (http://www.l4ka.org/)
+ %
+ % ChacmOS is free software; you can redistribute it and/or modify
+ % it under the terms of the GNU General Public License as published by
+ % the Free Software Foundation; either version 2 of the License, or
+ % (at your option) any later version.
+ %
+ % ChacmOS is distributed in the hope that it will be useful,
+ % but WITHOUT ANY WARRANTY; without even the implied warranty of
+ % MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ % GNU General Public License for more details.
+ %
+ % You should have received a copy of the GNU General Public License
+ % along with ChacmOS; see the file COPYING.  If not, write to
+ % the Free Software Foundation, 59 Temple Place #330, Boston, MA 02111, USA.
+ %
+
+\documentclass{article}
+\usepackage{graphicx}
+%\usepackage{amsmath}
+%\usepackage{amsfonts}
+%\usepackage{amssymb}
+\usepackage{german}
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
+%TCIDATA{OutputFilter=latex2.dll}
+%TCIDATA{CSTFile=LaTeX article (bright).cst}
+%TCIDATA{Created=Wed Jul 05 10:30:07 2000}
+%TCIDATA{LastRevised=Thu Jul 06 21:43:59 2000}
+%TCIDATA{<META NAME="GraphicsSave" CONTENT="32">}
+%TCIDATA{<META NAME="DocumentShell" CONTENT="General\Blank Document">}
+%TCIDATA{Language=American English}
+\newtheorem{theorem}{Theorem}
+\newtheorem{acknowledgement}[theorem]{Acknowledgement}
+\newtheorem{algorithm}[theorem]{Algorithm}
+\newtheorem{axiom}[theorem]{Axiom}
+\newtheorem{case}[theorem]{Case}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{conclusion}[theorem]{Conclusion}
+\newtheorem{condition}[theorem]{Condition}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{criterion}[theorem]{Criterion}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{exercise}[theorem]{Exercise}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{notation}[theorem]{Notation}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{solution}[theorem]{Solution}
+\newtheorem{summary}[theorem]{Summary}
+\newenvironment{proof}[1][Proof]{\textbf{#1.} }{\ \rule{0.5em}{0.5em}}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\section{AUFRUFSEMANTIK}
+
+\bigskip Alle Objekte werden durch Handles beschrieben, die aus einer
+Server-ID und einer Objekt-ID bestehen. Dabei ist erstere die Thread-ID des
+zuständigen Servers; Methodenaufrufe geschehen durch RPCs an eben diesen
+Server, wobei die Objekt-ID als Parameter übergeben wird. Objekte
+können mit Hilfe von Directories Namen zugewiesen werden. Ein Name ist ein
+ASCII-String beliebiger Länge und ohne spezielle Terminierung. Als Fehlercodes 
+werden negative Werte zurückgeliefert. Folgende Codes können immer auftreten:\newline
+
+\begin{tabular}
+[c]{ll}
+ESUPP & Die aufgerufene Funktion gehört zu einem Interface, das nicht
+unterstützt wird\\
+EDENIED & Der Aufrufer hat nicht das Recht, auf diese Funktion zuzugreifen\\
+EAGAIN & Die Methode kann im Moment kurzfristig nicht aufgerufen werden
+\end{tabular}
+\newline 
+
+Folgende Codes können nur bei bestimmten Funktionen auftreten (in der
+Beschreibung angegeben):
+
+\bigskip
+\begin{tabular}
+[c]{ll}
+ENOTFOUND & Das Objekt wurde nicht gefunden\\
+EBADPARM & Ein Parameter ist zu lang\\
+EEXISTS & Es ist eine Namenskollision aufgetreten\\
+EFULL & Die Kapazität reicht nicht aus\\
+ELOCKED & \ Der Zugriff ist gesperrt\\
+EEOF & Das Dateiende ist erreicht\\
+ENOTOPEN & Die Datei ist nicht offen\\
+EINVALID & Ein Parameter war nicht korrekt
+\end{tabular}
+\newline 
+
+Bei Verwendung ungültiger Objekt-IDs wird EDENIED zurückgegeben. Ein
+Sonderfall ist das DEFAULT\_OBJECT, das schon beim Start des Servers 
+existieren kann. Es wird zum Erzeugen neuer Objekte verwendet und 
+implementiert daher in der Regel das Creator-API. 
+
+Jeder Server sollte in seinem Wurzelverzeichnis
+nach einem Verzeichnis 'dev' suchen und sich dort unter einem passenden Namen
+eintragen. Existiert der gewünschte Name dort bereits, sollte ein anderer
+gewählt werden (etwa taskserver2, taskserver3, ...). 
+
+Server, die beim Booten geladen werden (können), dürfen sich nicht darauf
+verlassen, daß ihnen via self.get\_root() sofort ein gültiges
+Wurzelverzeichnis übergeben wird. Der Taskserver trägt dort erst später
+das entsprechende Handle ein. 
+Daher sollten Bootserver in kurzen Abständen get\_root() aufrufen, bis dort das
+gültige Handle erscheint (nachprüfen mit implements(DirectoryAPI)),
+und erst dann ihren Gerätenamen registrieren. Damit dieses Warten nicht
+die Startup-Phase blockiert, sollte es in einem eigenen Thread
+ablaufen.
+
+Der Root-Nameserver wird vom Taskserver daran erkannt, daß sein
+Defaultobjekt das Directory-API unterstützt. Der Taskserver legt dann
+zunächst das Wurzelverzeichnis an und übergibt dessen Handle an die bereits
+geladenen Server.
+
+\bigskip
+
+\section{API-DEFINITIONEN}
+
+\subsection{GenericAPI (IID 0)}
+
+\bigskip Jedes Objekt implementiert mindestens diese Methode. Ein
+implements(objID,0) liefert immer ESUCCESS und kann verwendet
+werden, um die Existenz des Objekts nachzuprüfen.
+
+\subsubsection{int implements([in] int objID, [in] int list\_size, [in, size\_is(list\_size)] int *interface\_list)}
+
+\bigskip Prüft, ob die angegebenen Interfaces für dieses Objekt
+unterstützt werden. Dabei ist \emph{interface\_list} ein String
+aus einer oder mehreren IIDs, von denen jede ein Dword lang ist.
+
+\bigskip
+\begin{tabular}
+[c]{ll}
+EYES & Alle Interfaces werden unterstützt\\
+ENO & Mindestens eines der Interfaces wird nicht unterstüzt
+\end{tabular}
+
+\subsection{DirectoryAPI (IID 0x524944)}
+
+\bigskip Unterstüzt von Verzeichnissen, und zwar immer in Verbindung mit
+dem FileAPI. Dieses wird verwendet, um den Verzeichnisinhalt auszulesen, und
+liefert eine nullseparierte Liste aller vergebenen Namen.
+
+\subsubsection{int resolve([in] int objID, [in] int size, [in, size\_is(size)]
+char *name, [out] int *dsvrID, [out] int *dobjID)}
+
+\bigskip Findet das Handle $<$dsvrID,dobjID$>$ zum angegebenen Namen. 
+Der Name ist ein ASCII-String ohne spezielle Terminierung. Eine 
+rekursive Namensauflösung findet nicht statt und muß vom Client selbst
+durchgeführt werden.\newline
+
+\begin{tabular}
+[c]{ll}
+ESUCCESS & Das Handle wurde gefunden\\
+ENOTFOUND & Ein Objekt dieses Namens ist nicht registriert\\
+ETOOLONG & Der Name ist zu lang
+\end{tabular}
+
+\subsubsection{int link([in] int objID, [in] int size, [in, size\_is(size)]
+char *name, [in] int dsvrID, [in] int dobjID)}
+
+\bigskip Registriert das Objekt $<$dsvrID, dobjID$>$
+unter dem angegebenen Namen.
+
+\bigskip
+\begin{tabular}
+[c]{ll}
+ESUCCESS & Der Name wurde registriert\\
+EEXISTS & Der Name existiert bereits\\
+ETOOLONG & Der Name ist zu lang\\
+EFULL & Das Verzeichnis kann keine weiteren Namen mehr aufnehmen
+\end{tabular}
+
+\subsubsection{int unlink([in] int objID, [in] int size, [in, size\_is(size)]
+char *name)}
+
+Löscht den angegebenen Namen\newline %
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Der Name wurde gelöscht\\
+ENOTFOUND & Ein Objekt mit diesem Namen existiert nicht
+\end{tabular}
+
+\subsection{CreatorAPI (IID 0x41455243)}
+
+\bigskip Unterstützt z.B. vom Taskserver (neue Tasks), von Verzeichnissen
+(neue Dateien und Verzeichnisse) oder vom Memoryserver (neues Memory-Objekt)
+
+\subsubsection{int can\_create([in] int objID, [in] int list\_size, [in, size\_is(list\_size)] int *interface\_list)}
+
+\bigskip Prüft, ob das Objekt ein neues Objekt erzeugen kann, das
+mindestens die in \emph{interface\_list} angegebenen Interfaces implementiert. 
+Vorsicht: Die Funktion liefert schon dann ein negatives Ergebnis, 
+wenn auch nur eines der angegebenen Interfaces von dem neu erzeugten 
+Objekt nicht unterstützt würde.
+
+\bigskip
+\begin{tabular}
+[c]{ll}
+EYES & Ja, ist prinzipiell möglich (kann aber durchaus nicht erlaubt sein)\\
+ENO & Nein, ist prinzipiell nicht möglich
+\end{tabular}
+
+\subsubsection{int create([in] int objID, [in] int list\_size, 
+[in, size\_is(list\_size)] int *interface\_list, [out] int *dsvrID, 
+[out] int *dobjID)}
+
+\bigskip Erzeugt ein neues Objekt mit den angegebenen Interfaces. Die Funktion
+schlägt fehl, wenn kein Objekt erzeugt werden kann, das mindestens die
+in \emph{interface\_list} angegebenen Interfaces implementiert. Eine Obermenge
+davon ist allerdings durchaus zulässig.
+
+\bigskip \begin{tabular}
+[c]{ll}%
+ESUCCESS & Ein neues Objekt wurde erzeugt und als $<$dsvrID, dobjID$>$
+zurückgeliefert\\
+EFULL & Aus Platzgründen kann kein neues Objekt mehr erzeugt werden
+\end{tabular}
+
+\subsection{FileAPI (IID 0x454C4946)}
+
+\bigskip Unterstützt von allen lesbaren Objekten, z.B. Dateien, serielle
+Schnittstellen, virtuelle Terminals etc., oft in Verbindung mit dem LockableAPI
+
+\subsubsection{int open([in] int objID, [in] int mode)}
+
+\bigskip öffnet die Datei mit den angegebenen Zugriffsrechten (OREAD,
+OWRITE) und legt einen Deskriptor an (Dateizeiger, Rechte etc). Eine Datei
+kann pro ThreadID nicht mehrfach geöffnet sein.
+
+\bigskip
+\begin{tabular}
+[c]{ll}
+ESUCCESS & Die Datei wurde geöffnet\\
+ENOTOPEN & Die Datei wurde von diesem Thread aus bereits geöffnet\\
+ELOCKED & Die Datei wurde von einem anderen Thread gesperrt
+\end{tabular}
+
+\subsubsection{int close([in] int objID)}
+
+\bigskip Schließt die Datei und löscht den Deskriptor. Nach dieser
+Operation ist open() wieder möglich.%
+
+\bigskip
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Die Datei wurde geschlossen\\
+ENOTOPEN & Die Datei war gar nicht geöffnet
+\end{tabular}
+
+\subsubsection{int read([in] int objID, [in] int length, [out] int *size,
+[out, size\_is(size)] char **data)}
+
+\bigskip Liest \emph{length}
+Bytes ab der aktuellen Position aus einer geöffneten Datei und setzt den
+Dateizeiger entsprechend weiter
+
+\bigskip
+\begin{tabular}
+[c]{ll}%
+$>$0 & Daten wurden gelesen; Rückgabewert ist die Anzahl der Bytes (length)\\
+EEOF & Das Dateiende ist erreicht; es konnten keine Daten gelesen werden\\
+ELOCKED & Die Datei ist von einem anderen Thread gesperrt worden\\
+ENOTOPEN & Die Datei ist nicht geöffnet
+\end{tabular}
+
+\subsubsection{int write([in] int objID, [in] int length, [in] int size, [in,
+size\_is(size)] char *data)}
+
+\bigskip Schreibt \emph{length}
+Bytes ab dem Dateizeiger und setzt diesen entsprechend weiter
+
+\bigskip
+\begin{tabular}
+[c]{ll}
+$>$0 & Daten wurden geschrieben; Rückgabewert ist die Anzahl der Bytes\\
+EFULL & Die Datei ist voll; es konnten keine Daten geschrieben werden\\
+ELOCKED & Die Datei ist von einem anderen Thread gesperrt worden\\
+ENOTOPEN & Die Datei ist nicht geöffnet
+\end{tabular}
+
+\subsubsection{int seek([in] int objID, [in] int pos)}
+
+\bigskip Setzt den Dateizeiger neu. Ist der Wert von \emph{pos} größer als
+die Dateilänge, so wird der Dateizeiger auf das Dateiende gesetzt.
+
+\bigskip
+\begin{tabular}
+[c]{ll}
+ESUCCESS & Der Dateizeiger wurde gesetzt\\
+ENOTOPEN & Die Datei ist nicht geöffnet
+\end{tabular}
+
+\subsubsection{int tell([in] int objID, [out] int *pos)}
+
+\bigskip Liefert den aktuellen Wert des Dateizeigers
+
+\bigskip
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Der Wert des Datenzeigers wurde zurückgeliefert\\
+ENOTOPEN & Die Datei ist nicht geöffnet
+\end{tabular}
+
+\subsubsection{int remove([in] int objID)}
+
+Löscht die Datei (sie muß nicht, kann aber offen sein)
+
+\bigskip%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Die Datei wurde gelöscht; das Objekthandle ist ab sofort
+ungültig\\
+ELOCKED & Die Datei ist von einem anderen Thread gesperrt worden
+\end{tabular}
+
+\subsection{TaskAPI (IID 0x4B534154)}
+
+Unterstützt vom allen Taskobjekten, die der Taskserver erzeugt
+
+\subsubsection{int set\_cmdline([in] int objID, [in] int size, [in,
+size\_is(size)] char *cmdline)}
+
+übergibt eine Kommandozeile an die Task
+
+\bigskip%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Die Kommandozeile wurde gespeichert\\
+ETOOLONG & Ein Teil der Kommandozeile wurde abgeschnitten, da sie zu lang
+war\\
+ELOCKED & Die Task läuft bereits
+\end{tabular}
+
+\subsubsection{int set\_root([in] int objID, [in] int dsvrID, [in] int dobjID)}
+
+übergibt das Objekthandle des Wurzelverzeichnisses an die Task
+
+\bigskip%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Das Handle wurde gespeichert\\
+EINVALID & Das angegebene Objekt implementiert entweder DirectoryAPI oder
+FileAPI nicht\\
+ELOCKED & Die Task läuft bereits
+\end{tabular}
+
+\subsubsection{int set\_memory([in] int objID, [in] int psvrID, [in] int pobjID)}
+
+übergibt das Handle des Memoryservers an die Task. Der Taskmanager ruft
+auf diesem Objekt get\_pagerid() auf und setzt dann diese ThreadID ans Pager.
+
+\bigskip%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Der Pager wurde gesetzt\\
+EINVALID & Das angegebene Objekt unterstützt nicht das MemoryAPI\\
+ELOCKED & Die Task läuft bereits
+\end{tabular}
+
+\subsubsection{int execute([in] int objID, [in] int fsvrID, [in] int fobjID)}
+
+Lädt die angegebene ELF-Datei und startet die Task. Dabei wird der Task in
+EAX die Server- und in EBX die Objekt-ID ihres Taskobjekts übergeben.
+
+\bigskip%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Die Task läuft\\
+EINVALID & Die Datei enthält kein korrektes ELF-Image\\
+ELOCKED & Die Task lief bereits vorher
+\end{tabular}
+
+\subsubsection{int kill([in] int objID)}
+
+Löscht die Task%
+
+\bigskip
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Die Task wurde gelöscht
+\end{tabular}
+
+\subsubsection{int get\_cmdline([in] int objID, [out] int *size, [out,
+size\_is(size)] char **cmdline)}
+
+Liest die Kommandozeile aus
+
+\bigskip%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Die Kommandozeile wurde in \emph{cmdline} übergeben
+\end{tabular}
+
+\subsubsection{int get\_root([in] int objID, [out] int *dsvrID, [out] int *dobjID)}
+
+Liest das Handle des Wurzelverzeichnisses aus
+
+\bigskip
+\begin{tabular}
+[c]{ll}
+ESUCCESS & Das Handle wurde in $<$dsvrID, dobjID$>$ übergeben
+\end{tabular}
+
+\subsubsection{int get\_threadid([in] int objID, [out] int *threadID)}
+
+Bestimmt die Thread-ID des ersten Threads
+
+\bigskip%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Die ID wurde übergeben\\
+EINVALID & Die Task läuft noch gar nicht
+\end{tabular}
+
+\subsubsection{int get\_memory([in] int objID, [out] int *psvrID, [out] int *pobjID)}
+
+Liest das Handle des Pagers aus%
+
+\bigskip
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Die ID wurde übergeben
+\end{tabular}
+
+\subsection{BlockAPI (IID 0x4B434C42)}
+
+Unterstützt von blockorientierten Geräten oder zustandslosen Dateien.
+Solche Geräte können in Dateisysteme gemountet werden und sind logisch
+als Menge von gleich großen Datenblöcken organisiert, die mit 0
+beginnende, lineare Nummern tragen und unabhängig voneinander gelesen bzw.
+geschrieben werden können.
+
+\subsubsection{int get\_capacity([in] int objID, [out] int *blockcnt)}
+
+Bestimmt die Anzahl der verfügbaren Blöcke.
+
+\bigskip
+\begin{tabular}
+[c]{ll}
+ESUCCESS & Die Anzahl wurde in \emph{blockcnt} übergeben
+\end{tabular}
+
+\subsubsection{int set\_capacity([in] int objID, [in] int blockcnt)}
+
+Mit dieser Methode kann die Kapazität eines Blockdevices geändert werden.
+Falls dies vom Gerät nicht unterstützt wird, muß \emph{ESUPP} als
+Fehlercode geliefert werden.
+
+\bigskip
+\begin{tabular}
+[c]{ll}
+ESUCCESS & Die Kapazität wurde neu gesetzt
+\end{tabular}
+
+\subsubsection{int get\_blocksize([in] int objID, [out] int *size)}
+
+Bestimmt die Anzahl der Bytes in einem Datenblock.
+
+\bigskip
+\begin{tabular}
+[c]{ll}
+ESUCCESS & Die Blockgröße wurde in \emph{size} übergeben
+\end{tabular}
+
+\subsubsection{int read([in] int objID, [in] int blocknr, [in] int count,
+[out] int *size, [out, size\_is(size)] char **data)}
+
+Liest Blöcke
+
+\bigskip%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Alle Blöcke konnten gelesen werden\\
+EEOF & Eine nicht existierende Blocknummer wurde angesprochen\\
+ELOCKED & Das Gerät wurde von einem anderen Thread gesperrt
+\end{tabular}
+
+\subsubsection{int write([in] int objID, [in] int blocknr, [in] int count,
+[in] int size, [in, size\_is(size)] char *data)}
+
+Schreibt Blöcke%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Alle Blöcke konnten geschrieben werden\\
+EEOF & Eine nicht existierende Blocknummer wurde angesprochen\\
+EINVALID & Es wurden zu viele oder zu wenige Daten übergeben\\
+ELOCKED & Das Gerät wurde von einem anderen Thread gesperrt
+\end{tabular}
+
+\subsection{FilesystemAPI (IID 0x53595346)}
+
+Ein Dateisystemobjekt implementiert Verzeichnisse und Dateien auf einem
+blockorientierten Gerät, das ihm per mount() übergeben wird. Daher
+wird in Verbindung mit dem FilesystemAPI immer auch das DirectoryAPI und
+eventuell das FileAPI unterstützt.
+
+\subsubsection{int mount([in] int objID, [in] int msvrID, [in] int mobjID)}
+
+Verbindet das Dateisystem mit einem Blockgerät
+
+\bigskip%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Mounten erfolgreich\\
+EINVALID & Das Gerät unterstützt nicht das BlockAPI\\
+ENOTFOUND & Das Gerät enthält kein Dateisystem dieser Art\\
+EEXISTS & Es wurde bereits ein Gerät gemountet
+\end{tabular}
+
+\subsubsection{int delete([in] int objID)}
+
+Löscht das Dateisystemobjekt
+
+\bigskip%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Dateisystem wurde gelöscht und alle Daten auf das Blockgerät
+zurückgeschrieben
+\end{tabular}
+
+\subsection{LockableAPI (IID 0x4B434F4C)}
+
+Wird von Objekten implementiert, auf die ein Thread exklusiven Zugriff haben
+kann. Im gesperrten Zustand erhalten alle anderen Threads den Fehlercode ELOCKED.
+
+\subsubsection{int lock([in] int objID)}
+
+Sperrt ein Objekt
+
+\bigskip%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Sperre gesetzt\\
+EEXISTS & Objekt wurde bereits von einem anderen Thread gesperrt
+\end{tabular}
+
+\subsubsection{int unlock([in] int objID)}
+
+Hebt eine Sperre auf
+
+\bigskip%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Sperre aufgehoben
+\end{tabular}
+
+\subsection{MemoryAPI (IID 0x4D454D)}
+
+Wird von Pagern unterstützt. Da bei Pagefault-RPCs keine Objekt-IDs
+übergeben werden, muß ein Pager den Aufrufer anhand seiner ThreadID identifizieren.
+
+\subsubsection{int get\_pagerid([in] int objID, [out] int *pagerID)}
+
+Liefert eine ThreadID, die bei neuen Tasks als Pager gesetzt werden kann. Der
+Pager ist dafür verantwortlich, daß Pagefaults, die an diese ThreadID
+gehen, beantwortet werden.
+
+\bigskip%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & ThreadID wurde zurückgeliefert
+\end{tabular}
+
+\subsubsection{int request\_physical([in] int objID, [in] int fpage)}
+
+Bewirkt, daß die angegebene fpage physisch gemappt wird. Falls in dem
+Bereich bereits andere Seiten gemappt sind, werden diese vorher geflusht. Im
+Regelfall ist eine solche Operation nur auf bestimmte Bereiche wie z.B. den
+Framebuffer erlaubt; andernfalls sollte EDENIED zurückgegeben werden.
+
+\bigskip%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Die Seiten wurden gemappt.
+\end{tabular}
+
+\subsubsection{int unmap([in] int objID, [in] int fpage)}
+
+Veranlaßt den Pager, die angegebene(n) Seite(n) zu flushen und dem
+Speicherkonto der Task gutzuschreiben. Kann i.d.R. nur von der Task selbst und
+demjenigen aufgerufen werden, der sie registriert hat (siehe bei attach). Beim
+Löschen von Task sollte zuerst set\_maxpages(0) und dann diese Funktion
+mit dem gesamten Adreßraum aufgerufen werden.
+
+\bigskip%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Die Seiten wurden geflusht
+\end{tabular}
+
+\subsubsection{int attach([in] int objID, [in] int taskID)}
+
+Weist dem Pager eine Task zu. Der Aufrufer dieser Methode erhält neben der
+Task das Recht, Seiten zu flushen. Die \emph{taskID}
+muß noch nicht existieren. Wird normalerweise vom Taskserver aufgerufen.
+
+\bigskip%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Zuweisung erfolgreich.\\
+ELOCKED & Das Objekt wurde bereits einer Task zugewiesen
+\end{tabular}
+
+\subsubsection{int set\_maxpages([in] int objID, [in] int maxpages)}
+
+Setzt das Seitenlimit für die Task so, daß nicht mehr als
+\emph{maxpages} Seiten vergeben werden. Hat die Task bereits mehr Seiten gemappt, so
+erhält sie keine neuen Seiten mehr. Nachdem attach() ausgeführt wurde,
+darf nur deren Aufrufer diese Funktion verwenden.
+
+\bigskip%
+
+\begin{tabular}
+[c]{ll}%
+ESUCCESS & Das Seitenlimit wurde gesetzt.\\
+ELOCKED & Die Task läuft; nur der Aufrufer von attach() kann noch
+set\_maxpages() aufrufen
+\end{tabular}
+
+\subsubsection{int get\_mapped([in] int objID, [in] int fpage, [out] int *pages)}
+
+Gibt zurück, wie viele Seiten in dem angegebenen Bereich gemappt sind
+(insbesondere auch, falls \emph{fpage}
+den gesamten virtuellen Adreßraum beschreibt). Zählt nur die vom
+Memoryserver herausgegebenen Seiten, nicht Kernelseiten.
+
+\bigskip
+
+\begin{tabular}
+[c]{ll}
+ESUCCESS & Die Anzahl der Seiten wurde in \emph{pages} zurückgeliefert
+\end{tabular}
+
+\end{document}

@@ -1,0 +1,2 @@
+The name server provides a hierarchical namespace for other components,
+in which they can register or mount other namespaces or file systems.

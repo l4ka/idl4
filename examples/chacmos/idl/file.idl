@@ -1,0 +1,13 @@
+[uuid(6)]
+
+interface file
+
+{
+  int open([in] int objID, [in] int mode);
+  int close([in] int objID);
+  int read([in] int objID, [in] int length, [out] int *size, [out, length_is(size)] char **data);
+  int write([in] int objID, [in] int length, [in] int size, [in, length_is(size)] char *data);
+  int seek([in] int objID, [in] int pos);
+  int tell([in] int objID, [out] int *pos);
+  int delete([in] int objID);
+};

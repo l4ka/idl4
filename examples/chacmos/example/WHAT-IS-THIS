@@ -1,0 +1,5 @@
+This component can be used as a template when implementing new servers.
+It starts a dummy server that provides just the mandatory 'generic'
+interface. New interfaces should be added to the IDL file first. After
+recompiling the stub code with the IDL4 compiler, the functions should
+be implemented in the calls.c file.

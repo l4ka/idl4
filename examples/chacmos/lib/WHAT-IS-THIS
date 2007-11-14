@@ -1,0 +1,3 @@
+ChacmOS comes with two runtime libraries: CRT0, which contains the
+generic startup code, and STD, which provides some I/O and string 
+functions similar to those in glibc.

@@ -1,0 +1,8 @@
+#include "constants.idl"
+#include "generic.idl"
+#include "creator.idl"
+#include "task.idl"
+#include "block.idl"
+
+interface booter : generic, creator, task, block {
+};

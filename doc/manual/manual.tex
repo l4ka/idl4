@@ -1,0 +1,48 @@
+% IDL4 User's Manual
+% Last Modified: October 26, 2006
+
+\documentclass[a4paper, 11pt]{book}
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
+\usepackage{fullpage}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{multirow}
+\pagestyle{empty}
+\input{version}
+\input{commands}
+
+%-------------------------------------------------------------------------------
+\begin{document}
+
+\title{\IDL Version \Version{}\\User's Manual}
+\author{Andreas Haeberlen\\University of Karlsruhe\\haeberlen@ira.uka.de}
+\date{October~2006}
+\maketitle
+
+%-------------------------------------------------------------------------------
+\chapter*{Preface}
+This manual is still under construction. More information on the 
+technology used in \IDL can be found in \cite{idl4}; for more details on
+CORBA IDL, please read \cite{corba-iiop} or one of the countless books
+on CORBA, e.g. \cite{redlich}.
+
+%-------------------------------------------------------------------------------
+\tableofcontents
+
+\include{idl}
+
+\include{working}
+
+\include{quickref}
+
+\include{appendix}
+
+%-------------------------------------------------------------------------------
+\footnotesize
+\bibliographystyle{plain}
+\bibliography{manual}
+
+%% acknowledgements
+
+\end{document}

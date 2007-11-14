@@ -1,0 +1,40 @@
+module allgemein
+
+{
+  interface nahrungsmittel
+
+  {
+    void essen(in int a, out string<5> b);
+  };
+};
+
+interface frucht;  // forward
+
+interface obst : allgemein::nahrungsmittel, frucht
+
+{
+  void ernten(in int a);
+};
+
+interface frucht
+
+{
+  void wachsen(in int a, in short b, in char c, out string<40> d);
+};
+
+interface steinobst : frucht
+
+{
+  void verschlucken(in int a);
+  void kauen(in int a);
+};
+
+module lieblingsfruechte
+
+{
+  interface birne : obst, steinobst
+
+  {
+    void waschen(in int a);
+  };
+};

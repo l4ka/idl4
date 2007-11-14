@@ -1,0 +1,760 @@
+\chapter{Writing interface definitions}
+
+\section{Basic structure}
+
+The specification in an IDL file describes one or more interfaces,
+which in turn may contain one or more methods. Here is an example:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+module storage {
+   interface textfile {
+      void readln(
+        inout short pos, 
+        out string line
+      );
+      void writeln(
+        inout short pos,
+        in string line
+      );
+      int get_pos();  
+   };
+};
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+library storage {
+   interface textfile {
+      void readln(
+        [in, out] short *pos, 
+        [out, string] char **line
+      );
+      void writeln(
+        [in, out] short *pos,
+        [in, string] char **line
+      );
+      int get_pos();  
+   };
+};
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+\IDL supports two specification languages, CORBA IDL and DCE
+IDL, so most example code is shown in both languages; the CORBA code
+is always on the left side.
+
+Note that the syntax is very similar to C/C++, especially in the case
+of DCE IDL. The most important difference is that every parameter
+has a directional attribute (\texttt{in}, \texttt{inout} or \texttt{out}).
+This is used to indicate whether the parameter contains
+
+\begin{itemize}
+\item input data, which must be copied from client to server,
+\item output data, which is returned by the server, or
+\item a combination of both
+\end{itemize}
+
+Another difference is the presence of special data types like 
+\texttt{string}, which have additional semantics; for example, \texttt{string}
+stands for a sequence of characters with a trailing zero, and 
+\texttt{sequence} denotes an array of variable length. These special
+types are explained later in this chapter.
+
+Finally, it is possible to avoid naming conflicts by putting interfaces
+into modules. For example, a network driver and a postal application
+might both want to provide a \texttt{packet} interface, possibly with
+different methods; this conflict can be resolved by using two separate
+modules.
+
+\section{Types}
+
+\subsection{Basic types}
+
+\subsubsection{Integers}
+
+\IDL supports \texttt{word} and \texttt{signed\_word} types, which
+are unsigned and signed integer types of machine word size.
+They correspond to the word types defined by L4, and should be
+used whenever possible.
+
+Moreover, the following CORBA integer types are also supported:
+
+\begin{center}\begin{tabular}{|l|l|l|}
+\hline
+Type name	& Size		& Value range			\\\hline
+unsigned short 	& 16 bit	& 0..65535			\\
+short 		& 16 bit 	& -32768..32767			\\
+unsigned long	& 32 bit	& 0..4294967295			\\
+long		& 32 bit	& -2147483648..2147483647 	\\	
+unsigned long long & 64 bit 	& 0..18446744073709551615	\\
+long long	& 64 bit	& -9223372036854775808..9223372036854775807 \\
+\hline
+\end{tabular}\end{center}
+
+The type \texttt{int} is also supported, although it is deprecated
+because the standard does not define its size (32 or 64 bit). Currently,
+it has 32 bit on all platforms.
+
+\subsubsection{Floating point}
+
+The following floating point types are available:
+
+\begin{center}\begin{tabular}{|l|l|l|l|}
+\hline
+Type name	& Size		& Value range		& Precision 	\\
+\hline
+float		& 32 bit	& $3.403\cdot 10^{38}$ 	& 6 digits	\\
+double		& 64 bit	& $1.798\cdot 10^{308}$	& 15 digits	\\
+long double	& 80 bit	& $1.1897\cdot 10^{4932}$ & 18 digits	\\
+\hline
+\end{tabular}\end{center}
+
+\subsubsection{Characters}
+
+\IDL supports both the 8-bit \texttt{char} and the 16-bit \texttt{wchar}
+data types. The type \texttt{unsigned char} may also be used, but it is
+deprecated. The reason is that in CORBA IDL, characters have special
+semantics; for example, they might be translated to a different character
+set by the marshalling code.
+
+If you need an 8-bit data type for binary data, you should use
+the \texttt{octet} type.
+
+\subsubsection{Thread IDs}
+
+\IDL has a special type named \texttt{threadid}, which corresponds to the
+L4 thread ID type. For threads implementing an \IDL interface, the
+interface name or the CORBA \texttt{Object} type may be used instead.
+
+\subsubsection{Flexpages}
+
+\IDL supports the L4 mapping primitives by providing a special type
+named \texttt{fpage}. This type corresponds to the flexpage type of
+the respective kernel interface; its size is platform-dependent.
+
+\subsubsection{Miscellaneous}
+
+\begin{center}\begin{tabular}{|l|l|l|}
+\hline
+Type name	& Size		& Possible values		\\\hline
+boolean		& 1 bit		& \texttt{true}, \texttt{false}	\\
+octet		& 8 bit		& 0..255			\\
+void		& undefined	& none				\\
+\hline
+\end{tabular}\end{center}
+
+The \texttt{void} data type may only be used for return values or
+as the base type for a pointer. The \texttt{any} type, which is
+also defined by CORBA, is not supported.
+
+\subsection{Constructed types}
+
+\subsubsection{Alias types}
+
+You can use \texttt{typedef} to create your own types:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+typedef unsigned short word_t;
+typedef string<40> max40char_t;
+typedef long array_t[4][3];
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+typedef unsigned short word_t;
+/* Bounded strings not supported */
+typedef long array_t[4][3];
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+\IDL maps the types in an interface description to the target language
+and adds a definition to the header files it produces. Thus, you can
+also use these types in your own code.
+
+\subsubsection{Sequences}
+
+CORBA provides a special type for transferring variable-length data,
+the \texttt{sequence} type. A sequence has a base type (e.g. \texttt{char})
+and, optionally, a size bound. Consider the following example:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+typedef sequence<float, 7> some_t;
+typedef sequence<char> another_t;
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+/* DCE IDL does not support
+   the sequence type */
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+The first line defines an array of \texttt{float}s that does not contain
+more than seven members (but may contain less); the second line defines
+a character array of arbitrary size. Note that sequences may only 
+appear in \texttt{typedef}s, not directly as an argument type.
+
+When using sequences, please consider that \IDL needs to preallocate 
+buffer space for them. Providing a tight size bound saves memory and
+considerably improves performance.
+
+Note that the sequence mapping in \IDL differs from the one specified 
+in \cite{corba-clm}. In the \IDL mapping, the programmer is \emph{always}
+responsible for the storage allocated for output sequences; the release
+flag is not supported. Also, output sequence parameters do not use double
+indirection; instead, they are treated just like ordinary structs.
+
+\subsubsection{Arrays}
+
+In DCE, there is no single type for variable-length arguments. Instead,
+size and location of the data are specified independently.
+Consider the following example:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+/* CORBA does not support
+   the length_is attribute */
+   
+   
+   
+   
+   
+   
+   
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+interface foo {
+  void bar(
+    [in] int len, 
+    [in, length_is(len)] float *addr
+  );
+  void xyz(
+    [in, length_is(5)] short *addr
+  );
+};
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+The stub code for \texttt{bar} transfers \texttt{len} floating point
+numbers, starting at \texttt{addr}, whereas the code for \texttt{xyz}
+always transfers five 16-bit integers.
+
+On the server side, buffer space is allocated and freed by the stub 
+code. In particular, for \texttt{out} arguments, the stub preallocates
+enough buffer space and passes a pointer to it when the function
+is invoked. Nevertheless, your code is not required to use this buffer;
+it can save one copy operation by returning a pointer of its own.
+
+On the client side, the stub allocates buffers for output values,
+but does not free them. It is your responsibility to invoke
+\texttt{CORBA\_free()} for every array that is returned by the server.
+
+Note that the argument to \texttt{length\_is} denotes the number of 
+elements, \emph{not} the size in bytes!
+
+\subsubsection{Structs}
+
+Structs are used exactly like their counterparts in C/C++:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+struct some_t {
+  short a[4], b;
+  float c;
+};
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+struct some_t {
+  short a[4], b;
+  float c;
+};
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+The stub allocates and frees buffers for the server; on the client
+side, this is the responsibility of the user. However, 
+\texttt{CORBA\_alloc()} is not used because structs have a fixed size;
+instead, for an \texttt{out} parameter, the user supplies a pointer to 
+an existing struct, which is then overwritten by the stub.
+
+\subsubsection{Unions}
+
+Unlike C/C++-style unions, a CORBA-compliant union needs a special
+member, the discriminant, which is used to decide which type the union
+currently contains. This is important because different types are
+usually marshalled differently. Consider the following example:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+union U switch (int) {
+  case 1 : long x;
+  case 2 : 
+  case 3 : string s;
+  default: char c;
+};
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+union U switch (int a) {
+  case 1 : long x;
+  case 2 :
+  case 3 : string s;
+  default: char c;
+};
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+If the discriminant, which is always named \texttt{\_d} in CORBA, has 
+the value 1, then one 32-bit value needs to be copied. When \texttt{\_d} 
+is 2 or 3, however, the union contains a pointer, which must be 
+dereferenced, resulting in a string to be transferred.
+
+\emph{Note: Unions are not yet available in the current \IDL release!}
+However, C/C++-style unions are supported. Such a union is always
+copied directly and entirely; thus, it may not contain types with
+special semantics, such as strings.
+
+\subsubsection{Strings}
+
+CORBA supports 8-bit and 16-bit strings with an optional length bound;
+strings are always terminated by the value zero. Consider the
+following example:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+typedef string<20> s20_t;
+
+interface foo {
+  void bar(
+    in string a,
+    inout s20_t b,
+    out wstring<40> c
+  );
+};
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+/* No bounded strings in DCE */
+
+interface foo {
+  void bar(
+    [in, string] char *a,
+    [in, out, string] char **b,
+    [out, string] short **c
+  );
+};    
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+The first argument to \texttt{foo::bar} is an 8-bit string of arbitrary
+length, whereas the second argument may contain at most 20 characters;
+the third argument is a 16-bit string of not more than 40 elements.
+The first two arguments are terminated by a zero byte, the third one
+ends with a 16-bit zero value.
+
+On the server side, strings are managed by the stubs. For output
+values, sufficient buffer space is allocated before the method is
+invoked; however, the implementation is free to move the pointer to
+another buffer. On the client side, the stubs allocate output buffers 
+using \texttt{CORBA\_alloc()}, but do not free them; it is the 
+responsibility of the user to invoke \texttt{CORBA\_free()} for each
+one.
+
+\subsubsection{Fixed point}
+
+CORBA includes a special type for fixed-point, BCD-coded numbers.
+This type is not supported by \IDL.
+
+\subsubsection{Bitfields}
+
+\IDL supports C/C++-style bitfields. These are allowed neither by
+CORBA nor by DCE and should be used with care, because they are
+highly platform-dependent. Consider the following example:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+struct msgdope_t {
+  long cc     : 8;
+  long parts  : 5;
+  long mwords : 19;
+};
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+struct msgdope_t {
+  long cc     : 8;
+  long parts  : 5;
+  long mwords : 19;
+};
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+\section{Exceptions}
+
+Currently, only the CORBA exception handling is supported by \IDL.
+In CORBA, there are two classes of exceptions: system and user-defined.
+System exceptions may be raised by any method (e.g. when the IPC fails
+or a timeout happens), whereas user-defined exceptions must be explicitly
+specified by the interface description. Consider the following example:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+interface file {
+  exception access_denied {};
+  exception not_found {};
+
+  void open(in string name)
+    raises (access_denied, 
+            not_found);
+};
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+/* DCE exception handling
+   not supported */
+   
+   
+   
+   
+   
+   
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+This means that the method \texttt{file::open} can, in addition to 
+system exceptions, raise two user-defined exceptions named 
+\texttt{access\_denied} and \texttt{not\_found}.
+
+CORBA also allows exceptions to contain additional information; for example,
+it may be useful to add a message for the user, or details on how to 
+correct the error. Here is an example:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+interface file {
+  exception access_denied {
+    string reason;
+    int missing_privileges;
+  }
+
+  void open(in string name)
+    raises (access_denied);
+};
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+/* DCE exception handling 
+   not supported */
+
+
+
+
+
+
+
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+\emph{Note: Currently, \IDL only supports exceptions without additional
+information}
+
+\section{Constants}
+
+It is possible to define constants within an interface. The constants
+are added to the generated header files, but may also be used within
+the specification itself. Consider the following example:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+interface foo {
+  const int addr_size = 6;
+  struct hwaddr {
+    octet mac[addr_size];
+  };
+};
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+interface foo {
+  const int addr_size = 6;
+  struct hwaddr {
+    unsigned small mac[addr_size];
+  };
+};
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+This causes a constant named \texttt{addr\_size} to be exported to the
+client header file; also, the struct \texttt{hwaddr} is declared to be 
+six bytes long.
+
+\section{Attributes}
+
+\subsection{Oneway functions}
+
+Usually, a remote procedure call consists of two phases: A send phase,
+in which the client sends a message to the server, and a receive phase,
+in which it waits for a reply. However, in some cases, it is necessary
+to omit the second phase, e.g. when the request is to be processed
+asynchronously, or when no reply is possible. 
+
+Here is how this behaviour can be specified:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+interface foo {
+  oneway void bar(in int a);
+};
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+interface foo {
+  [oneway] void bar([in] int a);
+};
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+Oneway methods must not have \texttt{inout} or \texttt{out} arguments;
+also, they may neither return a value nor raise any exceptions.
+Note that when the method returns on the client side, the absence of
+exceptions does not mean that the request has been processed successfully;
+it only indicates that the request transfer did not fail.
+
+\subsection{Function identifiers}
+
+As interfaces can contain multiple methods, and servers may implement
+multiple interfaces, the server must be able to tell from the request
+which method it is intended for. In \IDL, this is accomplished with
+numeric function IDs. 
+
+A function ID has two parts: An interface number and a method number.
+The interface number is identical for all methods in an interface, whereas
+different interfaces may be assigned the same number. The method number
+must be unique within an interface.
+
+By default, \IDL assigns the number 0 to all interfaces; this implicitly
+assumes that different interfaces are implemented by different threads.
+If this is not the case, you need to assign the interface numbers manually.
+The allowed range for interface numbers is platform dependent; typically,
+numbers of up to 1.000 are supported. Here is an example:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+[uuid(5)]
+interface foo {
+  void bar(in int a);
+};
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+[uuid(5)]
+interface foo {
+  void bar([in] int a);
+};
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+You can also change the assignment of method numbers by applying the
+\texttt{uuid} attribute to individual methods. However, this is rarely
+necessary.
+
+\subsection{Mapping fpages}
+
+The L4 IPC primitive supports mapping, which is essentially the transfer
+of a complete memory page from one address space to another. As a result,
+the page is shared by both address spaces; write operations in either of
+them are instantly visible in both. Also, the page may cover the same
+address range in both spaces, but this is not mandatory.
+
+\IDL supports this primitive with a special data type, the \texttt{fpage},
+which describes a memory region; see \cite{v2,x0,v4} for more details.
+\texttt{fpage}s are implicitly mapped during message transfer; the mapping
+persists and is not revoked upon completion of the call. Consider the
+following example:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+interface pager {
+  [uuid(0)]
+  void pagefault(
+    in int addr, in int ip,
+    out fpage f
+  );
+};
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+interface pager {
+  [uuid(0)]
+  void pagefault(
+    [in] long addr, [in] long ip,
+    [out] fpage *f
+  );
+};
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+This defines a method \texttt{pagefault} which takes two arguments,
+the fault address \texttt{addr} and the instruction pointer \texttt{ip};
+the server replies with an fpage \texttt{f} which is to be mapped to 
+the client address space.
+
+\section{Advanced features}
+
+\subsection{Local functions}
+
+Some L4 microkernels support a special IPC primitive, the local IPC or
+lipc, which is optimized for intra-address space calls \cite{lipc}. 
+This feature can be used with \IDL as follows:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+local interface foo {
+  short bar(
+    in short a, 
+    in short b
+  );
+};
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+[local] interface foox {
+  short bar(
+    [in] short a, 
+    [in] short b
+  );
+};
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+The \texttt{local} attribute indicates that the methods in this interface
+will \emph{only} be called via lipc. This permits \IDL to apply 
+considerably more optimizations; for example, lipc will be used by both
+client and server stubs, and parameters may be passed by reference.
+Possible applications include semaphore servers or dispatcher threads,
+which are used for distributing incoming requests to multiple worker threads
+in the same address space.
+
+\emph{Note: This is an experimental feature in the current release!}
+
+\subsection{Type import from C++ code}
+
+Usually, interface specifications should contain definitions for the data
+types they use. However, it may sometimes be convenient to import additional
+data types from the application code. \IDL supports this with a DCE-style
+\texttt{import} statement:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+interface foo {
+  import "l4/x86/types.h";
+  
+  void bar(in l4_taskid_t tid);
+}; 
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+interface foo {
+  import "l4/x86/types.h";
+  
+  void bar([in] l4_taskid_t tid);
+};
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+This makes available the types defined in \texttt{l4/x86/types.h} to all
+the methods in interface \texttt{foo}; \IDL contains a gcc-compatible
+C++ parser for this purpose. At compile time, the header file is scanned, 
+all global type definitions are imported and converted into IDL. 
+
+Note that unlike types defined directly in IDL, the generated header files
+do not contain definitions for imported types; instead, an \texttt{\#include}
+directive referring to the original file is added.
+
+\subsection{Disabling the memory allocator}
+
+By default, \IDL uses CORBA-style dynamic memory allocation, i.e. it calls
+\texttt{CORBA\_alloc} to reserve buffers for variable-length output values.
+In some cases, however, the data is expected at a specific location, which
+requires an additional copy on the client side. 
+
+To avoid this problem, you can use the \texttt{prealloc} attribute.
+Consider the following example:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+interface foo {
+  typedef sequence<long, 100> buf;
+  void bar(
+    [prealloc] out buf x
+  );
+};
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+interface foo {
+  void bar(
+    [out, prealloc, length_is(len)] 
+    char **data, [out] short *len
+  );
+};
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+No dynamic buffers are allocated in either case. Instead, you must
+explicitly provide a buffer by initializing \texttt{x.\_buffer} or
+\texttt{*data}, respectively. Also, you must supply the size of the
+buffer in \texttt{x.\_maximum} (or \texttt{*len} in the DCE example).
+
+While \texttt{prealloc} should be used for individual arguments,
+a command line option is also available which disables dynamic allocation
+for the entire file.
+
+\subsection{Receiving kernel messages}
+
+In the L4 world, exceptions are mapped to IPCs, which are sent by the kernel
+on behalf of the faulting application, e.g. to its pager. These messages
+can be received by \IDL stubs when special interface definitions are used.
+
+The following interface handles X0-style page faults, which are e.g.
+generated by the Hazelnut kernel:
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+interface pager {
+  [uuid(0)] void pagefault(
+    in long addr,
+    in long ip,
+    out fpage p
+  );
+};
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+interface pager {
+  [uuid(0)] void pagefault(
+    [in] long addr,
+    [in] long ip,
+    [out] fpage *p
+  );
+};
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+\noindent Here is how a V4 page fault is specified (e.g. for the 
+Pistachio kernel):
+
+\begin{center}\begin{tabular}{l@{\hspace{.4cm}}|@{\hspace{.5cm}}l}
+\begin{minipage}{7cm}\small\begin{verbatim}
+interface pager {
+  [kernelmsg(idl4::pagefault)] 
+  void pagefault(
+    in long addr,
+    in long ip,
+    in long privileges,
+    out fpage p
+  );
+};
+\end{verbatim}\end{minipage} & 
+\begin{minipage}{7cm}\small\begin{verbatim}
+interface pager {
+  [kernelmsg(idl4::pagefault)] 
+  void pagefault(
+    [in] long addr,
+    [in] long ip,
+    [in] long privileges,
+    [out] fpage *p
+  );
+};
+\end{verbatim}\end{minipage} \\
+\end{tabular}\end{center}
+
+Note that in this case, the fault type (i.e. the requested privileges) is 
+provided as a separate argument, whereas in the upper example, it is encoded
+in the lower two bits of the fault address.
+%\IDL also generates client stubs for those functions. These can e.g. be used
+%to forward kernel messages to another thread.

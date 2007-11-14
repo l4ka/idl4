@@ -1,0 +1,142 @@
+# central Makeconf file
+
+######################################################################
+# the root directory
+# this rule calculates the project root directory by looking for
+# the file Makeconf in the current and several parent directories
+
+TOPDIR = $(dir $(wildcard $(addsuffix /Makeconf, .. ../.. ../../.. ../../../.. $(ROOTDIR)) Makeconf))
+
+######################################################################
+# local Makeconf file
+
+ifneq ($(wildcard $(TOPDIR)Makeconf.local), )
+-include $(TOPDIR)Makeconf.local
+endif
+
+######################################################################
+# this should be the very first rule
+
+_default: all
+
+######################################################################
+# tools
+
+RM		= rm
+MV		= mv
+LN_S		= ln -s
+CC		= gcc
+CPP		= gcc
+DEPCC		= gcc
+LD		= ld
+OBJCOPY		= objcopy
+OBJDUMP		= objdump
+STRIP		= strip
+AR		= ar
+NM		= nm
+LEX		= flex
+YACC		= bison -y
+
+INCLUDES	= $(TOPDIR)include $(IDL4DIR)/src/include/user $(HAZELNUT)/apps/include
+LIBGCC		= $(dir $(shell $(CC) --print-lib))
+SFLAGS		= 
+LDFLAGS		= -L$(TOPDIR)lib
+CFLAGS 		= -Wall $(addprefix -I, $(INCLUDES)) $(addprefix -D, $(DEFINES)) -x c++ -fno-exceptions -Wno-unused
+CPPFLAGS	= -Wall
+LIB_DIR		= $(TOPDIR)lib/
+
+######################################################################
+# compile rules
+
+.SUFFIXES: .cc .o
+
+.c.o:
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+.cc.o:
+	$(CPP) $(CPPFLAGS) -c -o $@ $<
+
+$(TOPDIR)include/interfaces/%_server.h:	$(TOPDIR)idl/%.idl $(IDL4)
+	$(IDL4) -I$(HAZELNUT)/apps/include -s -mc++ -ix0 -pia32 -fno-fastcall -h $@ $< 
+
+$(TOPDIR)include/interfaces/%_client.h:	$(TOPDIR)idl/%.idl $(IDL4)
+	$(IDL4) -I$(HAZELNUT)/apps/include -c -mc++ -ix0 -pia32 -fno-fastcall -h $@ $<
+
+$(IDL4):
+	$(MAKE) -C $(IDL4DIR)/src all
+
+######################################################################
+# library rules
+
+LIB_OBJ	= $(patsubst %.S, %.o, $(patsubst %.c, %.o, $(patsubst %.cc, %.o, $(patsubst %.yy, %.o, $(patsubst %.ll, %.o, $(LIB_SRC))))))
+
+$(LIBFILE): $(LIB_OBJ)
+	$(AR) -rcs $(LIBFILE) $(LIB_OBJ)
+
+OBJ	= $(patsubst %.S, %.o, $(patsubst %.c, %.o, $(patsubst %.cc, %.o, $(patsubst %.yy, %.o, $(patsubst %.ll, %.o, $(OBJ_SRC))))))
+
+GFILES 	= $(addprefix $(TOPDIR)include/interfaces/, $(addsuffix _server.h, $(SERVER))) 
+GFILES += $(addprefix $(TOPDIR)include/interfaces/, $(addsuffix _client.h, $(CLIENT)))
+
+TARGET_F = $(addprefix $(TOPDIR)bin/, $(TARGET))
+
+LIB_D 	= $(addprefix $(TOPDIR)lib/lib, $(addsuffix .a, $(LIBS)))
+LIB_L	= $(addprefix -l, $(LIBS))
+CRT0_D	= $(addprefix $(TOPDIR)lib/crt0-, $(addsuffix .o, $(CRT0)))
+
+ifneq ($(LINK_ADDR), )
+LDFLAGS += -Ttext=$(LINK_ADDR)
+endif
+
+$(TARGET_F):	$(GFILES) $(OBJ) $(LIB_D) $(CRT0_D)
+	$(LD) $(LDFLAGS) -o $@ $(CRT0_D) $(OBJ) $(LIB_L)
+
+ifneq ($(TFTPDIR), )
+ifneq ($(TARGET), )
+install::	$(TARGET_F)
+	cp $(TARGET_F) $(TFTPDIR)
+else
+install::
+endif
+else
+install::
+endif        
+
+$(TARGET):	$(TARGET_F)
+
+$(TOPDIR)lib/lib%.a:
+	$(MAKE) -C $(TOPDIR)lib/$(*F)/
+
+$(TOPDIR)lib/crt0-%.o:
+	$(MAKE) -C $(TOPDIR)lib/crt0/$(*F)/
+
+######################################################################
+# cleanup
+
+celan clean::	
+	$(RM) -f *~ *.s *.o *.i *.ii *.s *.lst $(TARGET_F) $(GFILES) $(LIBFILE)
+
+ifneq ($(SUBDIRS), )
+dep::
+	@for d in $(SUBDIRS); do \
+	  $(MAKE) -C $${d} dep || exit 1; \
+	done
+
+celan clean::
+	@for d in $(SUBDIRS); do \
+	  (cd $${d} && $(MAKE) clean) \
+	done
+	@[ `find . -name "*.[oa]" | wc -l` != 0 ] &&\
+	  (echo ; echo Did not delete the following files - review;\
+	   find . -name "*.[oa]"; echo) || true
+
+install::
+	@for d in $(SUBDIRS); do \
+	  (cd $${d} && $(MAKE) install) \
+	done
+
+.PHONY: $(SUBDIRS)
+$(SUBDIRS):
+	$(MAKE) -C $@
+endif
+

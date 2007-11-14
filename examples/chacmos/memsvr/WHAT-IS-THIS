@@ -1,0 +1,4 @@
+This component acts as the memory server for the whole system. 
+At boot time, it will grab all the memory available from sigma0 and
+then offer it through the standard pager interface. See task creation
+process for more detail.

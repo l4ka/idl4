@@ -1,0 +1,17 @@
+#include "types.idl"
+
+[uuid(4)]
+
+interface task
+ 
+{
+  int set_cmdline([in] int objID, [in] int size, [in, length_is(size)] char *cmdline);
+  int set_root([in] int objID, [in] l4_threadid_t dsvrID, [in] int dobjID);
+  int set_memory([in] int objID, [in] l4_threadid_t psvrID, [in] int pobjID);
+  int execute([in] int objID, [in] l4_threadid_t fsvrID, [in] int fobjID);
+  int kill([in] int objID);
+  int get_cmdline([in] int objID, [out] int *size, [out, length_is(size)] char **cmdline);
+  int get_root([in] int objID, [out] l4_threadid_t *dsvrID, [out] int *dobjID);
+  int get_threadid([in] int objID, [out] l4_threadid_t *threadID);
+  int get_memory([in] int objID, [out] l4_threadid_t *psvrID, [out] int *pobjID);
+};

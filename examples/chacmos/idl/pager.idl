@@ -1,0 +1,8 @@
+#include "constants.idl"
+
+[uuid(0)]
+interface pager
+
+{
+  [uuid(0)] void pagefault([in] long addr, [in] long ip, [out] fpage *p);
+};

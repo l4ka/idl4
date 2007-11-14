@@ -1,0 +1,7 @@
+#include "constants.idl"
+
+interface example
+
+{
+  int implements([in] int objID, [in] int interfaceID);
+};

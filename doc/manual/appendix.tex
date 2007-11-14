@@ -1,0 +1,93 @@
+\chapter{Appendix}
+
+\section{Keywords}
+
+The following strings are reserved as keywords and should not be used
+for identifiers:
+
+\medskip\begin{center}
+\begin{tabular}{|p{3cm}|p{3cm}|p{3cm}|p{3cm}|}
+\hline
+all\_caches 	& float 	& nocache	& switch	\\
+any 		& gather	& noxfer	& TRUE		\\
+attribute 	& import	& Object	& typedef	\\
+base\_is 	& in		& octet		& union		\\
+boolean 	& include	& oneway	& unsigned	\\
+case 		& inout		& out		& uuid	 	\\
+char 		& int		& raises	& void		\\
+const 		& interface	& readonly	& wchar		\\
+context 	& l1\_only	& ref		& writeable	\\
+default 	& length\_is	& scatter	& wstring	\\
+double 		& library	& sequence	& 		\\
+enum 		& local		& short		& 		\\
+exception 	& long		& size\_is	& 		\\
+FALSE 		& max\_size	& string	&		\\
+fixed 		& module	& struct	&		\\
+\hline
+\end{tabular}
+\end{center}\medskip
+
+\section{Supported platforms}
+
+This table shows the current status of the individual \IDL backends. 
+You can select one of these backends with the \texttt{-i} and \texttt{-p}
+options:
+
+\begin{center}\begin{tabular}{|l|l|l|}
+\hline
+Platform & Interface & Current status\\
+\hline
+\multirow{3}{2cm}{IA32}&X0&Supported\\
+&V2&Supported; no mapping\\
+&V4&Supported\\
+\hline
+\multirow{3}{2cm}{Generic}&X0&Supported\\
+&V2&Supported; no mapping\\
+&V4&Supported\\
+\hline
+\end{tabular}\end{center}
+
+\section{Supported types}
+
+\subsection*{Basic data types}
+
+\begin{center}\begin{tabular}{|l|l|l|}
+\hline
+short 		& signed 16 bit integer 	& supported \\\hline
+long 		& signed 32 bit integer 	& supported \\\hline
+long long	& signed 64 bit integer		& supported \\\hline
+unsigned short 	& unsigned 16 bit integer	& supported \\\hline
+unsigned long	& unsigned 32 bit integer	& supported \\\hline
+unsigned long long & unsigned 64 bit integer	& supported \\\hline
+float		& floating point (32 bits)	& supported \\\hline
+double		& floating point (64 bits)	& supported \\\hline
+long double	& floating point (80 bits)	& supported \\\hline
+char		& 8 bit character		& supported \\\hline
+wchar		& 16 bit character		& supported \\\hline
+boolean		& boolean value			& supported \\\hline
+any		& wildcard type			& -\\\hline
+octet		& unsigned 8 bit integer	& supported \\\hline
+enum		& enumeration			& supported \\\hline
+ref		& pointer			& supported \\\hline
+fpage		& memory flexpage		& supported \\\hline
+fixed		& fixed-point decimal		& -\\
+\hline
+\end{tabular}\end{center}
+
+\subsection*{Constructed Types}
+
+\begin{center}\begin{tabular}{|l|l|l|}
+\hline
+string		& unbounded string		& supported\\\hline
+string<n>	& bounded string		& supported\\\hline
+wstring		& unbounded wide string		& supported\\\hline
+sequence<type>	& type sequence			& supported\\\hline
+sequence<type,n>& bounded type sequence		& supported\\\hline
+struct		& structure			& flat members supported\\\hline
+union		& union				& DCE style supported\\\hline
+Object		& object reference		& supported\\\hline
+array		& array				& supported\\\hline
+typedef		& alias type			& supported\\\hline
+exception	& exception			& memberless exceptions supported\\
+\hline
+\end{tabular}\end{center}
