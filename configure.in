@@ -1,0 +1,204 @@
+dnl Process this file with autoconf to produce a configure script.
+
+AC_INIT(src/base/main.cc)
+
+AM_INIT_AUTOMAKE(idl4, 1.1.0)
+AM_CONFIG_HEADER(config.h)
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_CXX
+AM_PROG_AS
+AC_PROG_RANLIB
+AM_PROG_LEX
+AC_PROG_YACC
+AC_PROG_LN_S
+AC_CHECK_PROG(LATEX,latex,latex)
+AC_CHECK_PROG(BIBTEX,bibtex,bibtex)
+AC_CHECK_PROG(DVIPS,dvips,dvips)
+AC_CHECK_PROGS(DVIPDF,dvipdfm dvipdf,$REJECT)
+
+AM_CONDITIONAL(HAS_LATEX, test "x$LATEX" != "x" -a "x$BIBTEX" != "x")
+AM_CONDITIONAL(HAS_DVIPS, test "x$DVIPS" != "x")
+AM_CONDITIONAL(HAS_DVIPDF, test "x$DVIPDF" != "x")
+
+
+AC_ARG_WITH(examples,
+	[  --with-examples              build the example programs],
+	WITH_EXAMPLES="yes")
+
+dnl Test suites.
+AC_ARG_WITH(testdir,
+	[  --with-testdir=DIR           path where testsuite is installed],
+	TESTSUITE_DIR="$withval", TESTSUITE_DIR="/tftpboot")
+
+AC_ARG_WITH(hazelnut,
+	[  --with-hazelnut=DIR          path to Hazelnut source tree],
+	WITH_HAZELNUT="yes" HAZELNUT_DIR="$withval")
+
+AC_ARG_WITH(pistachio-ia32,
+	[  --with-pistachio-ia32=DIR    path to Pistachio user build directory (IA32)],
+	WITH_PISTACHIO_IA32="yes" PISTACHIO_IA32_DIR="$withval")
+
+AC_ARG_WITH(pistachio-ia64,
+	[  --with-pistachio-ia64=DIR    path to Pistachio user build directory (IA64)],
+	WITH_PISTACHIO_IA64="yes" PISTACHIO_IA64_DIR="$withval")
+        
+AC_ARG_WITH(pistachio-arm,
+	[  --with-pistachio-arm=DIR     path to Pistachio user build directory (ARM)],
+	WITH_PISTACHIO_ARM="yes" PISTACHIO_ARM_DIR="$withval")
+        
+AC_ARG_WITH(pistachio-mips64,
+	[  --with-pistachio-mips64=DIR  path to Pistachio user build directory (MIPS64)],
+	WITH_PISTACHIO_MIPS64="yes" PISTACHIO_MIPS64_DIR="$withval")
+        
+AC_ARG_WITH(pistachio-alpha,
+	[  --with-pistachio-alpha=DIR   path to Pistachio user build directory (Alpha)],
+	WITH_PISTACHIO_ALPHA="yes" PISTACHIO_ALPHA_DIR="$withval")
+        
+AC_ARG_WITH(pistachio-powerpc,
+	[  --with-pistachio-powerpc=DIR path to Pistachio user build directory (PowerPC)],
+	WITH_PISTACHIO_POWERPC="yes" PISTACHIO_POWERPC_DIR="$withval")
+        
+AC_ARG_WITH(fiasco,
+	[  --with-fiasco=DIR            path to Fiasco source tree],
+	WITH_FIASCO="yes" FIASCO_DIR="$withval")
+
+AM_CONDITIONAL(WITH_TESTSUITE, test "x$WITH_HAZELNUT" != "x" ||
+		test "x$WITH_PISTACHIO_IA32" != "x" ||
+		test "x$WITH_PISTACHIO_IA64" != "x" ||
+		test "x$WITH_PISTACHIO_ARM" != "x" ||
+		test "x$WITH_PISTACHIO_MIPS64" != "x" ||
+		test "x$WITH_PISTACHIO_ALPHA" != "x" ||
+		test "x$WITH_PISTACHIO_POWERPC" != "x" ||
+		test "x$WITH_FIASCO" != "x")
+AM_CONDITIONAL(WITH_HAZELNUT, test x$WITH_HAZELNUT = xyes)
+AM_CONDITIONAL(WITH_EXAMPLES, test x$WITH_EXAMPLES = xyes)
+AM_CONDITIONAL(WITH_PISTACHIO_IA32, test x$WITH_PISTACHIO_IA32 = xyes)
+AM_CONDITIONAL(WITH_PISTACHIO_IA64, test x$WITH_PISTACHIO_IA64   = xyes)
+AM_CONDITIONAL(WITH_PISTACHIO_ARM, test x$WITH_PISTACHIO_ARM = xyes)
+AM_CONDITIONAL(WITH_PISTACHIO_MIPS64, test x$WITH_PISTACHIO_MIPS64 = xyes)
+AM_CONDITIONAL(WITH_PISTACHIO_ALPHA, test x$WITH_PISTACHIO_ALPHA = xyes)
+AM_CONDITIONAL(WITH_PISTACHIO_POWERPC, test x$WITH_PISTACHIO_POWERPC = xyes)
+AM_CONDITIONAL(WITH_FIASCO, test x$WITH_FIASCO = xyes)
+
+AC_SUBST(TESTSUITE_DIR)
+AC_SUBST(HAZELNUT_DIR)
+AC_SUBST(PISTACHIO_IA32_DIR)
+AC_SUBST(PISTACHIO_IA64_DIR)
+AC_SUBST(PISTACHIO_ARM_DIR)
+AC_SUBST(PISTACHIO_MIPS64_DIR)
+AC_SUBST(PISTACHIO_ALPHA_DIR)
+AC_SUBST(PISTACHIO_POWERPC_DIR)
+AC_SUBST(FIASCO_DIR)
+
+dnl Cross compilers
+AC_ARG_WITH(gcc-ia32,
+        [  --with-gcc-ia32=PREFIX       prefix for the IA32 toolchain],
+        WITH_TOOLCHAIN_IA32="yes" IA32_PREFIX="$withval")
+
+AC_ARG_WITH(gcc-ia64,
+        [  --with-gcc-ia64=PREFIX       prefix for the IA64 toolchain],
+        WITH_TOOLCHAIN_IA64="yes" IA64_PREFIX="$withval")
+
+AC_ARG_WITH(gcc-arm,
+        [  --with-gcc-arm=PREFIX        prefix for the ARM toolchain],
+        WITH_TOOLCHAIN_ARM="yes" ARM_PREFIX="$withval")
+
+AC_ARG_WITH(gcc-alpha,
+        [  --with-gcc-alpha=PREFIX      prefix for the Alpha toolchain],
+        WITH_TOOLCHAIN_ALPHA="yes" ALPHA_PREFIX="$withval")
+
+AC_ARG_WITH(gcc-mips64,
+        [  --with-gcc-mips64=PREFIX     prefix for the MIPS64 toolchain],
+        WITH_TOOLCHAIN_MIPS64="yes" MIPS64_PREFIX="$withval")
+
+AC_ARG_WITH(gcc-powerpc,
+        [  --with-gcc-powerpc=PREFIX    prefix for the PowerPC toolchain],
+        WITH_TOOLCHAIN_POWERPC="yes" POWERPC_PREFIX="$withval")
+
+AM_CONDITIONAL(WITH_TOOLCHAIN_IA32, test x$WITH_TOOLCHAIN_IA32 = xyes)
+AM_CONDITIONAL(WITH_TOOLCHAIN_IA64, test x$WITH_TOOLCHAIN_IA64 = xyes)
+AM_CONDITIONAL(WITH_TOOLCHAIN_ARM, test x$WITH_TOOLCHAIN_ARM = xyes)
+AM_CONDITIONAL(WITH_TOOLCHAIN_ALPHA, test x$WITH_TOOLCHAIN_ALPHA = xyes)
+AM_CONDITIONAL(WITH_TOOLCHAIN_MIPS64, test x$WITH_TOOLCHAIN_MIPS64 = xyes)
+AM_CONDITIONAL(WITH_TOOLCHAIN_POWERPC, test x$WITH_TOOLCHAIN_POWERPC = xyes)
+AC_SUBST(IA32_PREFIX)
+AC_SUBST(IA64_PREFIX)
+AC_SUBST(ARM_PREFIX)
+AC_SUBST(ALPHA_PREFIX)
+AC_SUBST(MIPS64_PREFIX)
+AC_SUBST(POWERPC_PREFIX)
+
+dnl Check for various functionality.
+AC_CHECK_FUNCS(getopt_long)
+AM_CONDITIONAL(NEED_GETOPT_LONG, test x$ac_cv_func_getopt_long = xno)
+
+
+dnl Remove generated Makefiles wthen doing maintainer-clean.
+MAINTAINERCLEANFILES="$MAINTAINERCLEANFILES Makefile.in"
+AC_SUBST(MAINTAINERCLEANFILES)
+
+
+dnl Always include top level includes.
+CPPFLAGS="$CPPFLAGS -I\$(top_srcdir)/src/include"
+AC_SUBST(CPPFLAGS)
+
+
+dnl Modified files.
+AC_OUTPUT(
+idl4-config
+Makefile
+doc/Makefile
+doc/manual/Makefile
+examples/Makefile
+examples/weaver/Makefile
+examples/test/Makefile
+examples/test/idl/Makefile
+examples/test/v2-ia32/Makefile
+examples/test/v2-ia32-generic/Makefile
+examples/test/x0-ia32/Makefile
+examples/test/x0-ia32-generic/Makefile
+examples/test/x0-arm-generic/Makefile
+examples/test/v4-ia32/Makefile
+examples/test/v4-ia32-generic/Makefile
+examples/test/v4-ia32-cs/Makefile
+examples/test/v4-ia64/Makefile
+examples/test/v4-ia64-generic/Makefile
+examples/test/v4-alpha-generic/Makefile
+examples/test/v4-mips64-generic/Makefile
+examples/test/v4-powerpc-generic/Makefile
+src/Makefile
+src/aoi/Makefile
+src/arch/Makefile
+src/arch/v2/Makefile
+src/arch/v2/ia32/Makefile
+src/arch/v4/Makefile
+src/arch/v4/ia32/Makefile
+src/arch/v4/ia64/Makefile
+src/arch/x0/Makefile
+src/arch/x0/ia32/Makefile
+src/base/Makefile
+src/base/lib/Makefile
+src/be/Makefile
+src/be/ops/Makefile
+src/be/types/Makefile
+src/cast/Makefile
+src/fe/Makefile
+src/fe/c++/Makefile
+src/fe/idl/Makefile
+src/fe/lib/Makefile
+src/test/Makefile
+src/test/glue/Makefile
+src/test/glue/v2-ia32/Makefile
+src/test/glue/x0-ia32/Makefile
+src/test/glue/x0-arm/Makefile
+src/test/glue/v4-ia32/Makefile
+src/test/glue/v4-ia64/Makefile
+src/test/glue/v4-alpha/Makefile
+src/test/glue/v4-mips64/Makefile
+src/test/glue/v4-powerpc/Makefile
+src/include/Makefile
+src/include/user/Makefile
+src/include/user/idl4/Makefile
+)
