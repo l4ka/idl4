@@ -268,7 +268,41 @@ CASTStatement *CBERootScope::buildServerTemplate()
   if (debug_mode&DEBUG_TESTSUITE)
     addTo(result, buildTestDeclarations());
 
-  forAll(aoi->interfaces, addTo(result, getInterface(item)->buildServerTemplate()));
+  if (globals.flags&FLAG_GENSUPERTMPL)
+    forAll(aoi->interfaces, addTo(result, getInterface(item)->buildServerTemplate()));
+  else
+    {
+      CAoiList *superSets = new CAoiList();
+      forAll(aoi->interfaces,
+             CAoiList *s = ((CAoiInterface *)item)->getAllSuperclasses();
+             superSets->add(new CAoiRef(s, s->context)));
+      forAll(aoi->interfaces,
+        {
+          CAoiInterface *iface = (CAoiInterface *)item;
+          bool isSuperClass = false;
+
+          forAll(superSets,
+            {
+              CAoiList *superSet = (CAoiList *)((CAoiRef *)item)->ref;
+              CAoiBase *self = ((CAoiRef *)superSet->getFirstElement())->ref;
+
+              forAll(superSet,
+                {
+                  CAoiBase *superclass = ((CAoiRef *)item)->ref;
+                  if (iface == superclass && superclass != self)
+                    {
+                      isSuperClass = true;
+                      goto end;
+                    }
+                });
+
+            });
+        end:
+          if (!isSuperClass)
+            addTo(result, getInterface(iface)->buildServerTemplate());
+        });
+    }
+
   forAll(aoi->submodules, addTo(result, getModule(item)->buildServerTemplate()));
   if (debug_mode&DEBUG_TESTSUITE)
     addTo(result, buildTestInvocation());

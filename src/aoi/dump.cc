@@ -408,3 +408,22 @@ void CAoiDumpVisitor::visit(CAoiCustomType *peer)
 {
   println("CAoiCustomType: %s", peer->name);
 }
+
+void CAoiDumpVisitor::visit(CAoiBase *peer)
+
+{
+  println("CAoiBase: %s", peer->name);
+}
+
+void CAoiDumpVisitor::visit(CAoiScope *peer)
+
+{
+  println("CAoiScope: %s", peer->name);
+}
+
+void CAoiDumpVisitor::visit(CAoiWordType *peer)
+
+{
+  println("CAoiWordType: %s", peer->name);
+}
+  

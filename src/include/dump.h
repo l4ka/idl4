@@ -41,6 +41,9 @@ public:
   virtual void visit(CAoiProperty *peer);
   virtual void visit(CAoiOperation *peer);
   virtual void visit(CAoiAttribute *peer);
+  virtual void visit(CAoiBase *peer);
+  virtual void visit(CAoiScope *peer);
+  virtual void visit(CAoiWordType *peer);
 };
 
 #endif

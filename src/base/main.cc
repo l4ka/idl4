@@ -60,6 +60,7 @@ void help(void)
   OPTION('p',"platform" ,"SPEC","specify platform (ia32, arm)");
   OPTION('i',"interface","SPEC","choose kernel interface (V2, X0, V4)");
   OPTION('m',"mapping"  ,"SPEC","use specific mapping (C)");
+  OPTION('S',"gen-super",""    ,"generate template code for superclasses");
   printf("\n");
   exit(1);
 }
@@ -75,7 +76,7 @@ void parse_args(int argc, char* argv[])
 
 {
   char optch;
-  static char stropts[] = "stco:h:d::vp:i:m:f:D:I:W:w:C:";
+  static char stropts[] = "stco:h:d::vp:i:m:f:D:I:W:w:C:S";
   int optidx;
   static struct option longopts[] = 
     { { "debug",     optional_argument, 0, 'd' },
@@ -87,6 +88,7 @@ void parse_args(int argc, char* argv[])
       { "mapping",   required_argument, 0, 'm' },
       { "word-size", required_argument, 0, 'w' },
       { "compat",    no_argument,       0, 'C' },
+      { "gen-super", no_argument,       0, 'S' },
       { "with-cpp",  required_argument, 0, 2   },
       { "sys-prefix",required_argument, 0, 3   },
       { "pre-call",  required_argument, 0, 4   },
@@ -255,6 +257,8 @@ void parse_args(int argc, char* argv[])
                    globals.word_size /= 8;
                    break;    
         case 'C' : globals.compat_mode = true;
+                   break;
+        case 'S' : globals.flags |= FLAG_GENSUPERTMPL;
                    break;
         case 2   : globals.cpp_path = optarg;
                    break;

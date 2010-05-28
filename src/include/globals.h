@@ -49,6 +49,7 @@
 #define FLAG_NOEMPTYFILES	(1<<5)
 #define FLAG_LOOPONLY		(1<<6)
 #define FLAG_MODULESONLY	(1<<7)
+#define FLAG_GENSUPERTMPL	(1<<8)
 
 typedef struct {
                  char outfile_name[FILENAME_MAX];
