@@ -40,7 +40,7 @@ void InputContext::openPipe()
   char *argv[MAX_CPP_ARGC];
   int argc = 0;
   
-  sprintf(cmd, "%s %s", cppPath, filename);
+  sprintf(cmd, "%s", cppPath);
   if (preprocIncludes)
     for (int i=0;preprocIncludes[i];i++)
       {
@@ -60,6 +60,8 @@ void InputContext::openPipe()
         strcat(cmd, " ");
         strcat(cmd, preprocOptions[i]);
       }
+  strcat(cmd, " ");
+  strcat(cmd, filename);
 
   if (debug_mode&DEBUG_CPP)
     fprintf(stderr, "executing [%s]\n", cmd);
