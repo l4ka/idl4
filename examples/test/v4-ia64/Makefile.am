@@ -1,5 +1,5 @@
 ## Process this file with automake to produce Makefile.in
-
+AUTOMAKE_OPTIONS= 		    -Wno-portability
 IDL4=				    $(top_builddir)/src/idl4
 IDLFLAGS=			    -dtest -dparanoid
 TESTDIR=                            $(top_srcdir)/examples/test
