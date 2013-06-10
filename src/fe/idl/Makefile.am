@@ -6,7 +6,7 @@ libidl_a_SOURCES=	context.cc import.cc parser.yy scanner.ll
 AM_LFLAGS=		-o$(LEX_OUTPUT_ROOT).c
 AM_YFLAGS=		-pidl -d
 
-CLEANFILES=		parser.cc parser.h scanner.cc
+CLEANFILES=		parser.cc parser.hh scanner.cc
 
 dist-hook:
-	rm -f $(distdir)/parser.h $(distdir)/parser.cc $(distdir)/scanner.cc
+	rm -f $(distdir)/parser.hh $(distdir)/parser.cc $(distdir)/scanner.cc

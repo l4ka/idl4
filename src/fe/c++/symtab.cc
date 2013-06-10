@@ -1,7 +1,7 @@
 #include <string.h>
 
 #include "cast.h"
-#include <parser.h>
+#include <parser.hh>
 
 #define dprint(a...) do { if (debug_mode&DEBUG_IMPORT) fprintf(stderr, a); } while (0)
 
