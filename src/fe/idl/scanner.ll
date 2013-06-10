@@ -6,7 +6,7 @@
 #include <math.h>
 
 #include "aoi.h"
-#include "parser.h"
+#include "parser.hh"
 #include "fe/idl.h"
 #include "fe/errors.h"
 

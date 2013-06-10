@@ -6,7 +6,7 @@
 #include <math.h>
 
 #include "cast.h"
-#include "parser.h"
+#include "parser.hh"
 #include "fe/c++.h"
 #include "fe/errors.h"
 
