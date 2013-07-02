@@ -72,4 +72,4 @@ EXTRA_DIST=	include/check.h \
                 include/user/idl4/Makefile.in
 
 wc:
-	(find . \( -name "*.[chS]" -or -name "*.cc" -or -name "*.ll" -or -name "*.yy" \) -and -not -name "*getopt*" -and -not -name "parser.cc" -and -not -name "scanner.cc" -and -not -name "parser.h") | xargs wc -l
+	(find . \( -name "*.[chS]" -or -name "*.cc" -or -name "*.ll" -or -name "*.yy" \) -and -not -name "*getopt*" -and -not -name "parser.cc" -and -not -name "scanner.cc" -and -not -name "parser.h" -and -not -name "parser.hh") | xargs wc -l

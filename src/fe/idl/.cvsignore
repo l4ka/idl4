@@ -3,4 +3,5 @@ Makefile
 Makefile.in
 parser.cc
 parser.h
+parser.hh
 scanner.cc
