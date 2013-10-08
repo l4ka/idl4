@@ -65,15 +65,14 @@ CASTStatement *CBEOpCopyUntilZero::buildClientUnmarshal()
   
   CASTStatement *assign = connection->assignVCCDataFromBuffer(CHANNEL_OUT,
     chunk, rvalue->clone());
-  CASTStatement *copy = assign ? dynamic_cast<CASTStatement *>(assign->next)
+  CASTStatement *copy = (assign && assign != assign->next) ? dynamic_cast<CASTStatement *>(assign->next)
                                : NULL;
   if (copy)
     copy->remove();
-  addTo(result, assign);
-  
+
   addTo(result, connection->assignVCCSizeFromBuffer(CHANNEL_OUT, chunk,
     clientOutLengthVar->clone()));
-  
+
   if (HAS_IN(channels))
     {
       /* This is an INOUT string. We must reallocate buffer space iff
@@ -110,6 +109,7 @@ CASTStatement *CBEOpCopyUntilZero::buildClientUnmarshal()
              );
            }
   
+  addTo(result, assign);
   if (copy)
     addTo(result, copy);
   
